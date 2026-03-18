@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7aa65bc5-36f5-40bf-9301-36a6c100b820" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/ani_com_go_front_ended.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/copilot.data.migration.ask2agent.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/App.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,24 +17,30 @@
       <entry key="_/Users/apple/Documents/AniComGo/front_ended" value="3B3pSJZPpKDn3JjlpQVaDqfPaoM" />
     </persistenceIdMap>
   </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="chat-panel" value="GPT-4.1" />
+      <entry key="agent-panel" value="GPT-4.1" />
+    </selectedModels>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "HoleonChen"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;HoleonChen&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/HoleonChen/AniComGo.git",
-    "accountId": "d9db01fa-a665-45fe-9755-159c381efef4"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/HoleonChen/AniComGo.git&quot;,
+    &quot;accountId&quot;: &quot;d9db01fa-a665-45fe-9755-159c381efef4&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="3B3pSJZPpKDn3JjlpQVaDqfPaoM" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -61,6 +64,7 @@
     "nodejs_interpreter_path": "node",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
+    "ts.external.directory.path": "/Users/apple/Documents/AniComGo/front_ended/front_ended/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -79,6 +83,7 @@
       <option name="presentableId" value="Default" />
       <updated>1773727607700</updated>
       <workItem from="1773727608623" duration="1445000" />
+      <workItem from="1773729451545" duration="1224000" />
     </task>
     <servers />
   </component>
