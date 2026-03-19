@@ -29,6 +29,9 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ title, poster, rating, tags, upda
                 cursor: 'pointer',
                 transition: 'all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)',
                 height: '100%',
+                minWidth: '160px', // 设置最小宽度，保证内容不被挤压，保持海报比例3:4
+                maxWidth: '260px', // 设置最大宽度，防止卡片过大
+                margin: '0 auto', // 居中显示
                 // 动态阴影：亮色时更柔和
                 boxShadow: isHovered ? token.boxShadow : token.boxShadowTertiary,
                 border: `1px solid ${token.colorBorderSecondary}`, // 亮色模式下淡淡的边框增加质感
@@ -111,9 +114,9 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ title, poster, rating, tags, upda
                     ))}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                    <Rate disabled allowHalf defaultValue={rating} count={5} style={{ fontSize: '12px', color: '#ffec3d' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#faad14', fontFamily: 'Monaco, monospace' }}>{rating.toFixed(1)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', flexWrap: 'nowrap' }}>
+                    <Rate disabled allowHalf defaultValue={rating} count={5} style={{ fontSize: '12px', color: '#ffec3d', minWidth: '90px', flexShrink: 0 }} />
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#faad14', fontFamily: 'Monaco, monospace', flexShrink: 0, marginLeft: '4px' }}>{rating.toFixed(1)}</span>
                 </div>
             </div>
         </div>

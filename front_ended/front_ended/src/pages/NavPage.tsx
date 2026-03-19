@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Layout, Menu, Input, Avatar, theme, type MenuProps } from 'antd';
 import {
     SearchOutlined,
@@ -10,32 +10,48 @@ import {
 
 const { Header } = Layout;
 
-const NavPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState('1');
+interface NavPageProps {
+    activeTab: string;
+    onTabChange: (key: string) => void;
+    onProfileClick?: () => void;
+}
+
+const NavPage: React.FC<NavPageProps> = ({ activeTab, onTabChange, onProfileClick }) => {
     const { token } = theme.useToken();
 
     const handleMenuClick: MenuProps['onClick'] = (e) => {
-        setActiveTab(e.key);
+        onTabChange(e.key);
     };
 
     return (
-        <Header style={{
-            position: 'fixed',
-            zIndex: 100,
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center', // 居中内容
-            padding: '0 24px', // 减小两侧 padding
-            background: token.colorBgContainer,
-            boxShadow: token.boxShadowTertiary,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`
-        }}>
+        <>
+            {/* 背景层：固定定位，置于最底层 */}
             <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0, width: '100vw',
+                height: '100vh',
+                zIndex: -1,
+                // 使用主题背景色，这会自动适配深色模式（变为深灰色）和浅色模式
+                backgroundColor: token.colorBgLayout,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+                transition: 'all 0.3s'
+            }} />
+
+            <Header style={{
+                position: 'fixed',
+                zIndex: 100,
                 width: '100%',
-                maxWidth: '1920px', // 限制最大宽度，避免在超宽屏上太分散
+                height: '72px', // 增加高度
                 display: 'flex',
                 alignItems: 'center',
+                padding: '0 24px', // 减小两侧 padding
+                background: token.colorBgContainer,
+                boxShadow: token.boxShadowTertiary,
+                borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                boxSizing: 'border-box' // 防止 padding 导致宽度溢出
             }}>
                 <div style={{
                     fontSize: '22px',
@@ -71,12 +87,15 @@ const NavPage: React.FC = () => {
                             border: 'none'
                         }}
                     />
-                    <Avatar icon={<UserOutlined />} style={{ backgroundColor: token.colorPrimary, cursor: 'pointer' }} />
+                    <Avatar
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: token.colorPrimary, cursor: 'pointer' }}
+                        onClick={onProfileClick}
+                    />
                 </div>
-            </div>
-        </Header>
+            </Header>
+        </>
     );
 };
 
 export default NavPage;
-
