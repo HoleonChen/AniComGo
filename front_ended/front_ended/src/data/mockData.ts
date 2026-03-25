@@ -1,27 +1,8 @@
-// 1. 严格的类型定义
-export interface Tag {
-    id: number;
-    name: string;
-}
+// 1. 严格的类型定义 - Moved to Model.ts
+import type { Anime, User, Collection, Comment } from './Model';
 
-export interface Studio {
-    id: number;
-    name: string;
-}
-
-export interface Anime {
-    id: number;
-    title: string;          // VARCHAR(100)
-    poster_url: string;     // VARCHAR(255)
-    total_episodes: number; // INT
-    release_date: string;   // DATE (YYYY-MM-DD)
-    description: string;    // TEXT
-    status: number;         // TINYINT (0: 未开播, 1: 连载中, 2: 已完结)
-    rating: number;         // 聚合评分
-    tags: Tag[];            // 关联标签
-    studios: Studio[];      // 关联工作室
-    type?: 'TV' | 'Movie';  // 类型：TV | Movie (新增)
-}
+// Re-export types for backward compatibility
+export * from './Model';
 
 // 辅助函数：根据状态生成更新信息
 export const getUpdateInfo = (anime: Anime): string => {
@@ -42,10 +23,20 @@ export const mockAnimes: Anime[] = [
         release_date: '2023-09-29',
         description: '勇者一行人打倒魔王之后的故事...',
         status: 2,
-        rating: 4.9,
+        rating: 5,
         tags: [{ id: 1, name: '奇幻' }, { id: 2, name: '治愈' }],
         studios: [{ id: 1, name: 'Madhouse' }],
-        type: 'TV'
+        type: 'TV',
+        characters: [
+            { id: 101, name: '芙莉莲', description: '活了千年的精灵魔法使', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Frieren', created_at: '', updated_at: '' },
+            { id: 102, name: '菲伦', description: '芙莉莲的弟子', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fern', created_at: '', updated_at: '' },
+            { id: 103, name: '修塔尔克', description: '艾森的弟子', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Stark', created_at: '', updated_at: '' }
+        ],
+        voice_actors: [
+            { id: 201, name: '种崎敦美', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=FrierenVA', created_at: '', updated_at: '' },
+            { id: 202, name: '市道真央', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=FernVA', created_at: '', updated_at: '' },
+            { id: 203, name: '小林千晃', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=StarkVA', created_at: '', updated_at: '' }
+        ]
     },
     {
         id: 2,
@@ -58,7 +49,19 @@ export const mockAnimes: Anime[] = [
         rating: 4.8,
         tags: [{ id: 3, name: '音乐' }, { id: 4, name: '日常' }],
         studios: [{ id: 2, name: 'CloverWorks' }],
-        type: 'TV'
+        type: 'TV',
+        characters: [
+            { id: 104, name: '后藤一里', description: '吉他英雄', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bocchi', created_at: '', updated_at: '' },
+            { id: 105, name: '伊地知虹夏', description: '下北泽大天使', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nijika', created_at: '', updated_at: '' },
+            { id: 106, name: '山田凉', description: '贝斯手', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ryo', created_at: '', updated_at: '' },
+            { id: 107, name: '喜多郁代', description: '现充', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kita', created_at: '', updated_at: '' }
+        ],
+        voice_actors: [
+            { id: 204, name: '青山吉能', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=BocchiVA', created_at: '', updated_at: '' },
+            { id: 205, name: '铃代纱弓', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=NijikaVA', created_at: '', updated_at: '' },
+            { id: 206, name: '水野朔', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=RyoVA', created_at: '', updated_at: '' },
+            { id: 207, name: '长谷川育美', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=KitaVA', created_at: '', updated_at: '' }
+        ]
     },
     {
         id: 3,
@@ -290,31 +293,6 @@ export const mockAnimes: Anime[] = [
     }
 ];
 
-// --- 用户数据结构 ---
-export interface User {
-    id: number;
-    username: string;       // VARCHAR(50)
-    avatar_url: string;     // VARCHAR(255)
-    bio: string;            // VARCHAR(255)
-    role: number;           // TINYINT (0: 普通用户, 1: 管理员)
-    status: number;         // TINYINT (0: 禁用, 1: 正常)
-    created_at: string;     // DATETIME
-    updated_at: string;     // DATETIME
-}
-
-// --- 收藏数据结构 ---
-export interface Collection {
-    id: number;
-    user_id: number;
-    anime_id: number;
-    progress: number;       // 观看进度 (当前集数)
-    rating: number;         // 用户评分 (0-10)
-    created_at: string;
-    updated_at: string;
-    // 关联的番剧数据 (便于前端使用)
-    anime?: Anime;
-}
-
 // --- 模拟当前用户 ---
 export const mockCurrentUser: User = {
     id: 1,
@@ -400,6 +378,58 @@ export const mockUserCollections: Collection[] = [
         created_at: '2020-04-06T10:00:00',
         updated_at: '2020-09-20T22:30:00',
         anime: mockAnimes[4] // 排球少年
+    }
+];
+
+// --- 模拟评论数据 ---
+export const mockComments: Comment[] = [
+    {
+        id: 1,
+        user_id: 101,
+        anime_id: 1,
+        parent_id: null,
+        content: 'This anime changed my life! The animation is top-tier and the story is incredibly moving.',
+        likes_count: 156,
+        status: 1,
+        created_at: '2023-10-05 14:30:00',
+        updated_at: '2023-10-05 14:30:00',
+        user: {
+            username: 'AnimeFan123',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user1'
+        },
+        isLiked: true
+    },
+    {
+        id: 2,
+        user_id: 102,
+        anime_id: 1,
+        parent_id: null,
+        content: 'Good story but the pacing is a bit slow in the middle. Still worth watching though.',
+        likes_count: 42,
+        status: 1,
+        created_at: '2023-10-10 09:15:00',
+        updated_at: '2023-10-10 09:15:00',
+        user: {
+            username: 'OtakuKing',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user2'
+        },
+        isLiked: false
+    },
+    {
+        id: 3,
+        user_id: 103,
+        anime_id: 1,
+        parent_id: null,
+        content: 'Not my cup of tea personally, but I can see why people like it.',
+        likes_count: 12,
+        status: 1,
+        created_at: '2023-11-01 18:45:00',
+        updated_at: '2023-11-01 18:45:00',
+        user: {
+            username: 'CasualViewer',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user3'
+        },
+        isLiked: false
     }
 ];
 

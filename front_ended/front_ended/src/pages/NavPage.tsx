@@ -1,27 +1,64 @@
-import React from 'react';
-import { Layout, Menu, Input, Avatar, theme, type MenuProps } from 'antd';
+import React, { useState } from 'react';
+import { Layout, Menu, Input, Avatar, theme, type MenuProps, Button, Dropdown } from 'antd'; // Add Dropdown
 import {
     SearchOutlined,
     UserOutlined,
     VideoCameraOutlined,
     FireOutlined,
-    HeartFilled
+    HeartFilled,
+    LogoutOutlined // Add LogoutOutlined
 } from '@ant-design/icons';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 const { Header } = Layout;
 
-interface NavPageProps {
-    activeTab: string;
-    onTabChange: (key: string) => void;
-    onProfileClick?: () => void;
-}
+const routeByMenuKey: Record<string, string> = {
+    '1': '/',
+    '2': '/season',
+    '3': '/watchlist',
+};
 
-const NavPage: React.FC<NavPageProps> = ({ activeTab, onTabChange, onProfileClick }) => {
+const menuKeyByPath: Record<string, string> = {
+    '/': '1',
+    '/season': '2',
+    '/watchlist': '3',
+};
+
+const NavPage: React.FC = () => {
     const { token } = theme.useToken();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { isAuthenticated, user, openLoginModal, logout } = useAuth(); // Destructure logout
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const activeTab = menuKeyByPath[location.pathname] ?? '';
 
     const handleMenuClick: MenuProps['onClick'] = (e) => {
-        onTabChange(e.key);
+        navigate(routeByMenuKey[e.key] ?? '/');
     };
+
+    const userMenuItems: MenuProps['items'] = [
+        {
+            key: 'profile',
+            label: '个人中心',
+            icon: <UserOutlined />,
+            onClick: () => navigate('/profile'),
+        },
+        {
+            type: 'divider',
+        },
+        {
+            key: 'logout',
+            label: '退出登录',
+            icon: <LogoutOutlined />,
+            danger: true,
+            onClick: () => {
+                logout();
+                navigate('/');
+            },
+        },
+    ];
 
     return (
         <>
@@ -53,20 +90,23 @@ const NavPage: React.FC<NavPageProps> = ({ activeTab, onTabChange, onProfileClic
                 borderBottom: `1px solid ${token.colorBorderSecondary}`,
                 boxSizing: 'border-box' // 防止 padding 导致宽度溢出
             }}>
-                <div style={{
-                    fontSize: '22px',
-                    fontWeight: 'bold',
-                    marginRight: '40px',
-                    color: token.colorPrimary, // 使用主题主色
-                    cursor: 'pointer',
-                    flexShrink: 0
-                }}>
+                <div
+                    style={{
+                        fontSize: '22px',
+                        fontWeight: 'bold',
+                        marginRight: '40px',
+                        color: token.colorPrimary, // 使用主题主色
+                        cursor: 'pointer',
+                        flexShrink: 0
+                    }}
+                    onClick={() => navigate('/')}
+                >
                     AniComGo
                 </div>
 
                 <Menu
                     mode="horizontal"
-                    selectedKeys={[activeTab]}
+                    selectedKeys={activeTab ? [activeTab] : []}
                     onClick={handleMenuClick}
                     style={{ flex: 1, border: 'none', minWidth: 0, background: 'transparent' }}
                     items={[
@@ -80,6 +120,13 @@ const NavPage: React.FC<NavPageProps> = ({ activeTab, onTabChange, onProfileClic
                     <Input
                         placeholder="搜下你想看的..."
                         prefix={<SearchOutlined style={{ color: token.colorTextDescription }} />}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onPressEnter={() => {
+                            if (searchQuery.trim()) {
+                                navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                            }
+                        }}
                         style={{
                             width: 220,
                             borderRadius: '20px',
@@ -87,13 +134,23 @@ const NavPage: React.FC<NavPageProps> = ({ activeTab, onTabChange, onProfileClic
                             border: 'none'
                         }}
                     />
-                    <Avatar
-                        icon={<UserOutlined />}
-                        style={{ backgroundColor: token.colorPrimary, cursor: 'pointer' }}
-                        onClick={onProfileClick}
-                    />
+                    {isAuthenticated ? (
+                        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+                            <Avatar
+                                src={user?.avatar_url}
+                                icon={<UserOutlined />}
+                                style={{ backgroundColor: token.colorPrimary, cursor: 'pointer' }}
+                            />
+                        </Dropdown>
+                    ) : (
+                         <Button type="primary" onClick={openLoginModal} shape="round">
+                            登录
+                        </Button>
+                    )}
                 </div>
             </Header>
+
+            <Outlet />
         </>
     );
 };

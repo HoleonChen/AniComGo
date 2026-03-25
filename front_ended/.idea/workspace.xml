@@ -5,15 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7aa65bc5-36f5-40bf-9301-36a6c100b820" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/front_ended/src/data/mockData.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/ProfilePage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/SeasonPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/WatchListPage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/assets/background.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCardExpanded.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCardProgress.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/components/LoginModal.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/context/AuthContext.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/data/Model.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/AnimeDetailPage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/SearchPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/src/components/AnimeCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/assets/hero.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/assets/react.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/assets/vite.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/data/mockData.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/data/mockData.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/main.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/HomePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/HomePage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/NavPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/NavPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/pages/ProfilePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/ProfilePage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/pages/SeasonPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/SeasonPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/pages/WatchListPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/WatchListPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,10 +41,13 @@
       <entry key="_/Users/apple/Documents/AniComGo/front_ended" value="3B3pSJZPpKDn3JjlpQVaDqfPaoM" />
     </persistenceIdMap>
   </component>
+  <component name="CopilotUserSelectedChatMode">
+    <option name="chatModeId" value="Agent" />
+  </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
-      <entry key="chat-panel" value="Auto" />
-      <entry key="agent-panel" value="Auto" />
+      <entry key="chat-panel" value="Gemini 3 Pro (Preview)" />
+      <entry key="agent-panel" value="Gemini 3 Pro (Preview)" />
     </selectedModels>
   </component>
   <component name="Git.Settings">
@@ -62,7 +81,6 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;origin/czy/frontend&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -76,6 +94,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/front_ended/src/assets" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -92,7 +115,9 @@
       <updated>1773727607700</updated>
       <workItem from="1773727608623" duration="1445000" />
       <workItem from="1773729451545" duration="1224000" />
-      <workItem from="1773730734771" duration="22478000" />
+      <workItem from="1773730734771" duration="24759000" />
+      <workItem from="1774246413576" duration="20591000" />
+      <workItem from="1774418730604" duration="4610000" />
     </task>
     <servers />
   </component>

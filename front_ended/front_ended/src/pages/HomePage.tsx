@@ -1,23 +1,68 @@
 import React from 'react';
 import { Layout, Row, Col, theme } from 'antd';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import AnimeCard from '../components/AnimeCard';
 import { mockAnimes, getUpdateInfo } from '../data/mockData';
+import heroImage from '../assets/background.jpg';
 
 const { Content, Footer } = Layout;
 
 const HomePage: React.FC = () => {
     const { token } = theme.useToken();
+    const navigate = useNavigate(); // Initialize hook
 
     // 只展示热门的（status=2 完结的或者 id<10 的经典）
     const displayAnimes = mockAnimes.filter(a => a.status === 2 || a.id < 10);
 
     return (
-        <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+        <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent', position: 'relative' }}>
+             {/* Split Background Layer */}
+             <div style={{ position: 'fixed', inset: 0, zIndex: 0, display: 'flex', background: token.colorBgLayout }}>
+                 {/* Left Background */}
+                 <div style={{
+                     flex: 1,
+                     backgroundImage: `url(${heroImage})`,
+                     backgroundSize: 'auto 130%',
+                     backgroundRepeat: 'no-repeat',
+                     backgroundPosition: 'right center', // Changed from left to right to align to screen edge when flipped
+                     transform: 'scaleX(-1)', // Mirror to create symmetry
+                 }} />
+
+                 {/* Center Seam Highlight */}
+                 <div style={{
+                     position: 'absolute',
+                     left: '50%',
+                     top: 0,
+                     bottom: 0,
+                     width: '65vw',
+                     transform: 'translateX(-50%)',
+                     background: `linear-gradient(to right, transparent 0%, ${token.colorBgBase} 20%, ${token.colorBgBase} 80%, transparent 100%)`,
+                     opacity: 1,
+                     zIndex: 1,
+                     pointerEvents: 'none',
+                 }} />
+
+                 {/* Right Background (Mirrored) */}
+                 <div style={{
+                     flex: 1,
+                     backgroundImage: `url(${heroImage})`,
+                     backgroundSize: 'auto 130%',
+                     backgroundRepeat: 'no-repeat',
+                     backgroundPosition: 'right center', // Changed from left to right to align to screen edge
+                     transform: 'scaleX(1)',
+                 }} />
+                
+                {/* Optional dark overlay for better contrast if image is too bright, or to fit dark theme */}
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.1)' }} />
+            </div>
+
             {/* 主体内容：注意顶部的 padding 避开固定的 Header */}
             <Content style={{
                 padding: '112px 24px 40px 24px',
                 display: 'flex',
                 justifyContent: 'center',
+                position: 'relative', // Ensure content is above background
+                zIndex: 1
             }}>
                 <div style={{
                     width: '100%',
@@ -51,6 +96,7 @@ const HomePage: React.FC = () => {
                                     rating={anime.rating}
                                     tags={anime.tags.map(t => t.name)}
                                     updateInfo={getUpdateInfo(anime)}
+                                    onClick={() => navigate(`/anime/${anime.id}`)} // Add navigation
                                 />
                             </Col>
                         ))}
@@ -66,4 +112,3 @@ const HomePage: React.FC = () => {
 };
 
 export default HomePage;
-

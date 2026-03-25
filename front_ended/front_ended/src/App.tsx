@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ConfigProvider, theme } from 'antd';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import SeasonPage from './pages/SeasonPage';
 import WatchListPage from './pages/WatchListPage';
 import ProfilePage from './pages/ProfilePage';
+import AnimeDetailPage from './pages/AnimeDetailPage'; // Import AnimeDetailPage
+import SearchPage from './pages/SearchPage';
 import NavPage from './pages/NavPage';
+import LoginModal from './components/LoginModal';
 
 const App: React.FC = () => {
-    // 自动检测系统深色模式 (可选)
     const [isDarkMode, setIsDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    const [activeTab, setActiveTab] = useState('1');
-    const [showProfile, setShowProfile] = useState(false);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -19,47 +21,35 @@ const App: React.FC = () => {
         return () => mediaQuery.removeEventListener('change', handler);
     }, []);
 
-    const renderContent = () => {
-        // 如果点击了头像，显示用户资料页面
-        if (showProfile) {
-            return <ProfilePage />;
-        }
-
-        // 否则显示菜单对应的页面
-        switch (activeTab) {
-            case '1':
-                return <HomePage />;
-            case '2':
-                return <SeasonPage />;
-            case '3':
-                return <WatchListPage />;
-            default:
-                return <HomePage />;
-        }
-    };
-
     return (
         <ConfigProvider
             theme={{
                 algorithm: isDarkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
                 token: {
-                    colorPrimary: '#ff679a', // 保持品牌色
+                    colorPrimary: '#ff679a',
                     borderRadius: 8,
                     ...(isDarkMode && {
-                        colorBgBase: '#222222', // 使用较亮的深灰色作为底色
+                        colorBgBase: '#222222',
                     }),
                 },
             }}
         >
-            <NavPage
-                activeTab={showProfile ? '' : activeTab}
-                onTabChange={(key) => {
-                    setActiveTab(key);
-                    setShowProfile(false); // 返回到内容页面
-                }}
-                onProfileClick={() => setShowProfile(true)}
-            />
-            {renderContent()}
+            <AuthProvider>
+                <Routes>
+                    <Route element={<NavPage />}>
+                        <Route index element={<HomePage />} />
+                        <Route path="season" element={<SeasonPage />} />
+                        <Route path="watchlist" element={<WatchListPage />} />
+                        <Route path="profile" element={<ProfilePage />} />
+                        <Route path="anime/:id" element={<AnimeDetailPage />} /> {/* Add Route */}
+                        <Route path="search" element={<SearchPage />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Route>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+                <LoginModal />
+                <Outlet />
+            </AuthProvider>
         </ConfigProvider>
     );
 };

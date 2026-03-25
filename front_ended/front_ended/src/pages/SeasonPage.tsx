@@ -2,12 +2,15 @@ import React from 'react';
 import { Layout, Row, Col, theme, Typography, Divider } from 'antd';
 import AnimeCard from '../components/AnimeCard';
 import { mockAnimes, getUpdateInfo, type Anime } from '../data/mockData';
+import heroImage from '../assets/background.jpg';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const { Content, Footer } = Layout;
 const { Title } = Typography;
 
 const SeasonPage: React.FC = () => {
     const { token } = theme.useToken();
+    const navigate = useNavigate(); // Initialize hook
 
     // 假设今天是 2026-03-18 (周三)
     // 实际项目中应使用 new Date()
@@ -37,11 +40,53 @@ const SeasonPage: React.FC = () => {
     }
 
     return (
-        <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+        <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent', position: 'relative' }}>
+            {/* Split Background Layer */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, display: 'flex', background: token.colorBgLayout }}>
+                {/* Left Background */}
+                <div style={{
+                    flex: 1,
+                    backgroundImage: `url(${heroImage})`,
+                    backgroundSize: 'auto 130%',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right center', // Changed from left to right to align to screen edge when flipped
+                    transform: 'scaleX(-1)', // Mirror to create symmetry
+                }} />
+
+                {/* Center Seam Highlight */}
+                <div style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: 0,
+                    bottom: 0,
+                    width: '65vw',
+                    transform: 'translateX(-50%)',
+                    background: `linear-gradient(to right, transparent 0%, ${token.colorBgBase} 20%, ${token.colorBgBase} 80%, transparent 100%)`,
+                    opacity: 1,
+                    zIndex: 1,
+                    pointerEvents: 'none',
+                }} />
+
+                {/* Right Background (Mirrored) */}
+                <div style={{
+                    flex: 1,
+                    backgroundImage: `url(${heroImage})`,
+                    backgroundSize: 'auto 130%',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right center', // Changed from left to right to align to screen edge
+                    transform: 'scaleX(1)',
+                }} />
+                
+                {/* Optional dark overlay for better contrast if image is too bright, or to fit dark theme */}
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.1)' }} />
+            </div>
+
             <Content style={{
                 padding: '112px 24px 40px 24px',
                 display: 'flex',
                 justifyContent: 'center',
+                position: 'relative', // Ensure content is above background
+                zIndex: 1
             }}>
                 <div style={{
                     width: '100%',
@@ -97,6 +142,7 @@ const SeasonPage: React.FC = () => {
                                                 rating={anime.rating}
                                                 tags={anime.tags.map(t => t.name)}
                                                 updateInfo={getUpdateInfo(anime)}
+                                                onClick={() => navigate(`/anime/${anime.id}`)}
                                             />
                                         </Col>
                                     ))}
@@ -139,6 +185,7 @@ const SeasonPage: React.FC = () => {
                                             rating={anime.rating}
                                             tags={anime.tags.map(t => t.name)}
                                             updateInfo={getUpdateInfo(anime)}
+                                            onClick={() => navigate(`/anime/${anime.id}`)}
                                         />
                                     </Col>
                                 ))}
@@ -157,6 +204,3 @@ const SeasonPage: React.FC = () => {
 };
 
 export default SeasonPage;
-
-
-
