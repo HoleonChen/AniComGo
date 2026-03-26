@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Progress, Tag, theme } from 'antd';
+import { Card, Progress, Tag, theme, Button } from 'antd'; // Add Button
+import { PlusOutlined } from '@ant-design/icons'; // Add PlusOutlined
 import AnimeCard from './AnimeCard';
 
 export type AnimeCardProgressProps = {
@@ -13,6 +14,7 @@ export type AnimeCardProgressProps = {
     progress?: number;
     totalEpisodes?: number;
     onCardClick?: () => void; // Renamed to ensure uniqueness
+    onUpdateProgress?: (newProgress: number) => void; // Add this line
 };
 
 const AnimeCardProgress: React.FC<AnimeCardProgressProps> = ({
@@ -25,12 +27,20 @@ const AnimeCardProgress: React.FC<AnimeCardProgressProps> = ({
                                                                  mode,
                                                                  progress = 0,
                                                                  totalEpisodes = 1,
-                                                                 onCardClick, 
+                                                                 onCardClick,
+                                                                 onUpdateProgress,
                                                              }) => {
     const { token } = theme.useToken();
 
     const safeTotal = Math.max(totalEpisodes, 1);
     const percent = Math.round((progress / safeTotal) * 100);
+
+    const handlePlusClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onUpdateProgress && progress < safeTotal) {
+            onUpdateProgress(progress + 1);
+        }
+    };
 
     return (
         <Card
@@ -56,12 +66,25 @@ const AnimeCardProgress: React.FC<AnimeCardProgressProps> = ({
                         <div style={{ padding: '8px' }}>
                             <div
                                 style={{
+                                    display: 'flex', // Use flex
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
                                     fontSize: '12px',
                                     marginBottom: '4px',
                                     color: token.colorTextDescription,
                                 }}
                             >
-                                进度: {progress}/{safeTotal}
+                                <span>进度: {progress}/{safeTotal}</span>
+                                {progress < safeTotal && (
+                                    <Button 
+                                        type="primary" 
+                                        size="small" 
+                                        shape="circle" 
+                                        icon={<PlusOutlined />} 
+                                        onClick={handlePlusClick}
+                                        style={{ transform: 'scale(0.8)' }}
+                                    />
+                                )}
                             </div>
                             <Progress
                                 percent={percent}

@@ -6,7 +6,8 @@ import {
     VideoCameraOutlined,
     FireOutlined,
     HeartFilled,
-    LogoutOutlined // Add LogoutOutlined
+    LogoutOutlined,
+    SettingOutlined // Add SettingOutlined
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
@@ -38,16 +39,25 @@ const NavPage: React.FC = () => {
         navigate(routeByMenuKey[e.key] ?? '/');
     };
 
-    const userMenuItems: MenuProps['items'] = [
+    const menuItemsList: MenuProps['items'] = [
+        ...(user?.role === 1
+            ? [
+                {
+                    key: 'admin',
+                    label: '管理后台',
+                    icon: <SettingOutlined />,
+                    onClick: () => navigate('/admin'),
+                },
+                { type: 'divider' as const },
+            ]
+            : []),
         {
             key: 'profile',
             label: '个人中心',
             icon: <UserOutlined />,
             onClick: () => navigate('/profile'),
         },
-        {
-            type: 'divider',
-        },
+        { type: 'divider' as const },
         {
             key: 'logout',
             label: '退出登录',
@@ -135,7 +145,7 @@ const NavPage: React.FC = () => {
                         }}
                     />
                     {isAuthenticated ? (
-                        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+                        <Dropdown menu={{ items: menuItemsList }} placement="bottomRight" arrow>
                             <Avatar
                                 src={user?.avatar_url}
                                 icon={<UserOutlined />}

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Card, theme, Button, Typography, Rate, Tag } from 'antd'; // Removed unused Row, Col
 import { PlayCircleOutlined } from '@ant-design/icons';
-import type { Anime } from '../data/mockData';
+import type { Anime } from '../data/Model';
 import { getRatingLevel } from '../data/Model';
 
 const { Text, Paragraph, Title } = Typography;
@@ -22,7 +22,7 @@ const AnimeCardExpanded: React.FC<AnimeCardExpandedProps> = ({
     const { token } = theme.useToken();
 
     // 模拟获取“当前更新进度”
-    // 根据 mockData 中的 getUpdateInfo 逻辑反推:
+    // 根据 animeUtils 中的 getUpdateInfo 逻辑反推:
     // if (anime.status === 2) return `全${anime.total_episodes}话`;
     // if (anime.status === 1) return `更新至第${Math.max(1, anime.total_episodes - 2)}话`;
     const currentUpdatedEpisode = useMemo(() => {

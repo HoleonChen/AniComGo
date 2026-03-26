@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Row, Col, Input, theme, Empty } from 'antd';
+import { Layout, Row, Col, Input, theme, Empty, Spin, message } from 'antd';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
-import { mockAnimes, getUpdateInfo } from '../data/mockData';
+import { getUpdateInfo } from '../utils/animeUtils';
+import type { Anime } from '../data/Model';
+import animeService from '../services/animeService';
 import heroImage from '../assets/background.jpg';
 
 const { Content } = Layout;
@@ -13,26 +15,40 @@ const SearchPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const query = searchParams.get('q') || '';
     const [localQuery, setLocalQuery] = useState(query);
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState<Anime[]>([]);
 
     useEffect(() => {
         setLocalQuery(query);
+        const performSearch = async () => {
+            if (!query.trim()) {
+                setResults([]);
+                return;
+            }
+            setLoading(true);
+            try {
+                // Call animeService with query
+                const { list } = await animeService.getAnimes(1, 50, query);
+                setResults(list);
+            } catch (error) {
+                console.error("Search failed:", error);
+                message.error("搜索失败");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        performSearch();
     }, [query]);
 
     const handleSearch = (value: string) => {
         if (value.trim()) {
             setSearchParams({ q: value.trim() });
+        } else {
+            setSearchParams({});
+            setResults([]);
         }
     };
-
-    // Filter logic: Search by title or description or tags
-    const results = mockAnimes.filter(anime => {
-        const q = query.toLowerCase();
-        return (
-            anime.title.toLowerCase().includes(q) ||
-            anime.description?.toLowerCase().includes(q) ||
-            anime.tags.some(tag => tag.name.toLowerCase().includes(q))
-        );
-    });
 
     return (
         <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent', position: 'relative' }}>
@@ -101,37 +117,39 @@ const SearchPage: React.FC = () => {
                          />
                     </div>
 
-                    {results.length > 0 ? (
-                        <Row gutter={[20, 24]}>
-                            {results.map((anime) => (
-                                <Col
-                                    xs={24}
-                                    sm={12}
-                                    md={8}
-                                    lg={6}
-                                    xl={4}
-                                    xxl={4}
-                                    key={anime.id}
-                                >
-                                    <AnimeCard
-                                        title={anime.title}
-                                        poster={anime.poster_url}
-                                        rating={anime.rating}
-                                        tags={anime.tags.map(t => t.name)}
-                                        updateInfo={getUpdateInfo(anime)}
-                                        onClick={() => navigate(`/anime/${anime.id}`)}
-                                    />
-                                </Col>
-                            ))}
-                        </Row>
+                    {loading ? (
+                         <div style={{ textAlign: 'center', padding: '50px' }}>
+                            <Spin size="large" />
+                         </div>
                     ) : (
-                        <div style={{ padding: '80px 0', display: 'flex', justifyContent: 'center' }}>
-                            <Empty description={
-                                <span style={{ color: token.colorTextDescription }}>
-                                    未找到与 "{query}" 相关的番剧
-                                </span>
-                            } />
-                        </div>
+                        <>
+                            {results.length > 0 ? (
+                                <Row gutter={[20, 24]}>
+                                    {results.map((anime) => (
+                                        <Col
+                                            xs={24}
+                                            sm={12}
+                                            md={8}
+                                            lg={6}
+                                            xl={4}
+                                            xxl={4}
+                                            key={anime.id}
+                                        >
+                                            <AnimeCard
+                                                title={anime.title}
+                                                poster={anime.poster_url}
+                                                rating={anime.rating}
+                                                tags={anime.tags ? anime.tags.map(t => t.name) : []}
+                                                updateInfo={getUpdateInfo(anime)}
+                                                onClick={() => navigate(`/anime/${anime.id}`)}
+                                            />
+                                        </Col>
+                                    ))}
+                                </Row>
+                            ) : (
+                                <Empty description="暂无搜索结果" />
+                            )}
+                        </>
                     )}
                 </div>
             </Content>

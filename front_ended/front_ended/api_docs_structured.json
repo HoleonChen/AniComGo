@@ -1,0 +1,4067 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AniComGo 后端接口文档",
+    "description": "AniComGo 后端 OpenAPI 文档，可直接导入 Apifox。\n所有接口统一使用 Result 响应结构：{ code, message, data }。\n",
+    "version": "1.4.0"
+  },
+  "tags": [
+    {
+      "name": "用户端-认证"
+    },
+    {
+      "name": "用户端-用户"
+    },
+    {
+      "name": "用户端-番剧"
+    },
+    {
+      "name": "管理端-番剧管理"
+    },
+    {
+      "name": "用户端-评论"
+    },
+    {
+      "name": "用户端-收藏"
+    },
+    {
+      "name": "管理端-用户管理"
+    },
+    {
+      "name": "管理端-评论管理"
+    },
+    {
+      "name": "管理端-收藏管理"
+    },
+    {
+      "name": "通用-文件上传"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "用户注册",
+        "deprecated": false,
+        "description": "创建普通用户账号，可选提交头像地址和个人简介。注册成功后直接返回令牌与用户信息。",
+        "tags": [
+          "用户端-认证"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "example": {
+                "username": "misaka_10032",
+                "password": 12345678,
+                "avatarUrl": "http://127.0.0.1:9000/avatar/2026/default-user.jpg",
+                "bio": "超电磁炮爱好者"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "注册成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "注册成功",
+                  "data": {
+                    "token": "eyJhbGciOiJIUzI1NiJ9.demo.token",
+                    "user": {
+                      "id": 1,
+                      "username": "misaka_10032",
+                      "avatarUrl": "http://127.0.0.1:9000/avatar/2026/default-user.jpg",
+                      "bio": "超电磁炮爱好者",
+                      "role": 0,
+                      "status": 1
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "参数校验失败或用户名已存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "用户名已存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "用户登录",
+        "deprecated": false,
+        "description": "使用用户名和密码登录系统。登录成功后返回 JWT 令牌，前端后续访问受保护接口时需携带该令牌。",
+        "tags": [
+          "用户端-认证"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "username": "misaka_10032",
+                "password": 12345678
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessAuth",
+            "description": "认证成功"
+          },
+          "401": {
+            "description": "用户名或密码错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 401,
+                  "message": "用户名或密码错误",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "403": {
+            "description": "账号已被禁用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 403,
+                  "message": "账号已被禁用",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "获取当前登录用户信息",
+        "deprecated": false,
+        "description": "根据当前请求携带的 JWT，返回当前登录用户的公开资料，用于前端初始化登录态。",
+        "tags": [
+          "用户端-认证"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessProfile",
+            "description": "用户资料查询成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "当前用户不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "用户不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "分页查询用户列表",
+        "deprecated": false,
+        "description": "面向用户端的公开用户列表查询接口，可按用户名、角色、状态进行筛选。",
+        "tags": [
+          "用户端-用户"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "description": "用户名模糊搜索关键字",
+            "required": false,
+            "example": "misaka",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "用户角色筛选，0 表示普通用户，1 表示管理员",
+            "required": false,
+            "example": 0,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "用户状态筛选，0 表示禁用，1 表示正常",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessUserPage",
+            "description": "用户分页查询成功"
+          }
+        },
+        "security": []
+      }
+    },
+    "/users/me": {
+      "put": {
+        "summary": "修改当前用户资料",
+        "deprecated": false,
+        "description": "当前登录用户修改自己的用户名、头像地址和个人简介，不允许直接修改角色和状态。",
+        "tags": [
+          "用户端-用户"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              },
+              "example": {
+                "username": "misaka_10033",
+                "avatarUrl": "http://127.0.0.1:9000/avatar/2026/user-1-20260325-120001.jpg",
+                "bio": "Level 5 爱好者"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "更新个人资料成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "更新个人资料成功",
+                  "data": {
+                    "id": 1,
+                    "username": "御坂10033",
+                    "avatarUrl": "https://cdn.example.com/avatar/misaka-new.jpg",
+                    "bio": "Level 5 爱好者",
+                    "role": 0,
+                    "status": 1
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "参数校验失败或用户名重复",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "用户名已存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/me/password": {
+      "patch": {
+        "summary": "修改当前用户密码",
+        "deprecated": false,
+        "description": "当前登录用户使用旧密码校验后修改密码，修改成功后建议前端重新登录。",
+        "tags": [
+          "用户端-用户"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              },
+              "example": {
+                "oldPassword": 12345678,
+                "newPassword": 87654321
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改密码成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改密码成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "旧密码错误或新密码不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "旧密码错误",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/me/avatar": {
+      "post": {
+        "summary": "上传当前用户头像",
+        "deprecated": true,
+        "description": "当前登录用户上传头像图片文件。该接口为兼容旧前端保留，推荐新前端优先使用通用上传接口 `/upload`。接口仅负责文件上传并返回头像地址，前端随后可将返回的 avatarUrl 写入修改个人资料接口。",
+        "tags": [
+          "用户端-用户"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "image/jpeg, image/png, image/webp"
+                }
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "头像图片文件，仅建议上传 jpg、jpeg、png、webp 等常见图片格式",
+                    "example": ""
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "头像上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "头像上传成功",
+                  "data": {
+                    "avatarUrl": "http://127.0.0.1:9000/avatar/2026/user-1-20260325-120001.jpg"
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "文件为空、格式不支持或文件过大",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "文件类型不受支持": {
+                    "summary": "文件类型不受支持",
+                    "value": {
+                      "code": 400,
+                      "message": "头像文件类型不受支持",
+                      "data": null
+                    }
+                  },
+                  "文件过大": {
+                    "summary": "文件过大",
+                    "value": {
+                      "code": 400,
+                      "message": "头像文件过大",
+                      "data": null
+                    }
+                  },
+                  "扩展名不支持": {
+                    "summary": "扩展名不支持",
+                    "value": {
+                      "code": 400,
+                      "message": "头像文件扩展名不受支持",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "查询用户详情",
+        "deprecated": false,
+        "description": "根据用户 ID 查询公开用户资料，适用于个人主页、评论作者资料展示等场景。",
+        "tags": [
+          "用户端-用户"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "用户 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessProfile",
+            "description": "用户资料查询成功"
+          },
+          "404": {
+            "description": "用户不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "用户不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/animes": {
+      "get": {
+        "summary": "分页查询番剧列表",
+        "deprecated": false,
+        "description": "面向用户端的番剧分页查询接口，可按标题模糊搜索，并可根据状态筛选。",
+        "tags": [
+          "用户端-番剧"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            }
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "description": "番剧标题模糊搜索关键字",
+            "required": false,
+            "example": "芙莉莲",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "番剧状态筛选，1 表示已完结，2 表示连载中",
+            "required": false,
+            "example": 2,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                1,
+                2
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessAnimePage",
+            "description": "番剧分页查询成功"
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "summary": "新增番剧",
+        "deprecated": false,
+        "description": "仅管理员可用。创建新的番剧资料，用于后台录入番剧基础信息。",
+        "tags": [
+          "管理端-番剧管理"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnimeRequest"
+              },
+              "example": {
+                "title": "葬送的芙莉莲",
+                "posterUrl": "http://127.0.0.1:9000/poster/2026/frieren.jpg",
+                "tags": "奇幻,冒险,治愈",
+                "studios": "Madhouse",
+                "rating": 4.8,
+                "totalEpisodes": 28,
+                "releaseDate": "2023-09-29T00:00:00.000Z",
+                "description": "勇者一行人打倒魔王之后的旅途故事。",
+                "status": 2
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "新增番剧成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "新增番剧成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/animes/{id}": {
+      "get": {
+        "summary": "查询番剧详情",
+        "deprecated": false,
+        "description": "根据番剧 ID 查询详情，用于番剧详情页展示。",
+        "tags": [
+          "用户端-番剧"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "番剧 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessAnimeDetail",
+            "description": "番剧详情查询成功"
+          },
+          "404": {
+            "description": "番剧不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "番剧不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "put": {
+        "summary": "修改番剧",
+        "deprecated": false,
+        "description": "仅管理员可用。更新番剧标题、海报、集数、简介、状态等基础信息。",
+        "tags": [
+          "管理端-番剧管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "番剧 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnimeRequest"
+              },
+              "example": {
+                "title": "葬送的芙莉莲 第二季",
+                "posterUrl": "http://127.0.0.1:9000/poster/2026/frieren-s2.jpg",
+                "tags": "奇幻,冒险,成长",
+                "studios": "Madhouse",
+                "rating": 4.9,
+                "totalEpisodes": 24,
+                "releaseDate": "2026-01-10T00:00:00.000Z",
+                "description": "延续旅途的新篇章，继续探索人与精灵不同的时间感。",
+                "status": 2
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改番剧成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改番剧成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "番剧不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "番剧不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "删除番剧",
+        "deprecated": false,
+        "description": "仅管理员可用。根据番剧 ID 删除番剧记录。",
+        "tags": [
+          "管理端-番剧管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "番剧 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除番剧成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "删除番剧成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "番剧不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "番剧不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/comments": {
+      "get": {
+        "summary": "分页查询评论列表",
+        "deprecated": false,
+        "description": "面向用户端的公开评论列表查询接口，仅返回可见评论，可按番剧和用户筛选。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            }
+          },
+          {
+            "name": "animeId",
+            "in": "query",
+            "description": "按番剧 ID 筛选评论",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "按用户 ID 筛选评论",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "用户端固定只允许传 1，表示查询可见评论",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessCommentPage",
+            "description": "评论分页查询成功"
+          },
+          "400": {
+            "description": "用户端评论查询参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "这里只允许查询可见评论",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "summary": "发表评论",
+        "deprecated": false,
+        "description": "当前登录用户对番剧发表评论。业务规则要求用户必须先收藏该番剧后才能评论。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreateRequest"
+              },
+              "example": {
+                "animeId": 1,
+                "parentId": null,
+                "content": "这部番的结局处理得很完整。"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "发表评论成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "发表评论成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "description": "需先收藏番剧后才能评论",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 403,
+                  "message": "你必须先收藏该番剧后才能评论",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "番剧不存在或父评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "番剧不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/comments/{id}/like-status": {
+      "get": {
+        "summary": "查询当前用户对指定评论的点赞状态",
+        "deprecated": false,
+        "description": "当前登录用户查询自己是否已点赞某条评论，同时返回该评论当前的点赞总数。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询评论点赞状态成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "commentId": 10,
+                    "likesCount": 12,
+                    "liked": true
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/comments/{id}": {
+      "get": {
+        "summary": "查询评论详情",
+        "deprecated": false,
+        "description": "根据评论 ID 查询评论详情，仅可查询可见评论。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessCommentDetail",
+            "description": "评论详情查询成功"
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "put": {
+        "summary": "修改评论",
+        "deprecated": false,
+        "description": "当前登录用户修改自己的评论内容；管理员也可执行该操作。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentUpdateRequest"
+              },
+              "example": {
+                "content": "我改主意了，第 12 集才是最精彩的一集。"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改评论成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改评论成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "description": "仅评论作者本人或管理员可操作",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 403,
+                  "message": "你只能操作自己的评论",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "删除评论",
+        "deprecated": false,
+        "description": "当前登录用户删除自己的评论；管理员也可执行该操作。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除评论成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "删除评论成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "description": "仅评论作者本人或管理员可操作",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 403,
+                  "message": "你只能操作自己的评论",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/comments/{id}/like": {
+      "patch": {
+        "summary": "点赞评论",
+        "deprecated": false,
+        "description": "当前登录用户对指定评论点赞。重复点赞会被拒绝。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "评论点赞成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "评论点赞成功",
+                  "data": {
+                    "commentId": 10,
+                    "likesCount": 13,
+                    "liked": true
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "已经点赞过该评论",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "你已经点赞过该评论",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "取消评论点赞",
+        "deprecated": false,
+        "description": "当前登录用户取消对指定评论的点赞。未点赞时会被拒绝。",
+        "tags": [
+          "用户端-评论"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取消评论点赞成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "取消评论点赞成功",
+                  "data": {
+                    "commentId": 10,
+                    "likesCount": 12,
+                    "liked": false
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "当前用户尚未点赞该评论",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "你还没有点赞该评论",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/collections": {
+      "get": {
+        "summary": "分页查询收藏列表",
+        "deprecated": false,
+        "description": "面向用户端的收藏列表查询接口，可按用户 ID 查看其收藏记录。",
+        "tags": [
+          "用户端-收藏"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "按用户 ID 查询其收藏记录",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessCollectionPage",
+            "description": "收藏分页查询成功"
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "summary": "新增收藏",
+        "deprecated": false,
+        "description": "当前登录用户收藏某部番剧，并可同步记录观看进度和评分。",
+        "tags": [
+          "用户端-收藏"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionCreateRequest"
+              },
+              "example": {
+                "animeId": 1,
+                "progress": 12,
+                "rating": 5
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "新增收藏成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "新增收藏成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "重复收藏或评分、进度参数不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 400,
+                  "message": "收藏记录已存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "番剧不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "番剧不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/collections/anime/{animeId}": {
+      "get": {
+        "summary": "查询当前用户对指定番剧的收藏详情",
+        "deprecated": false,
+        "description": "当前登录用户根据番剧 ID 查询自己的收藏记录，可用于番剧收藏页回显当前评分、追番进度等信息。",
+        "tags": [
+          "用户端-收藏"
+        ],
+        "parameters": [
+          {
+            "name": "animeId",
+            "in": "path",
+            "description": "番剧 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询收藏详情成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "id": 5,
+                    "userId": 1,
+                    "animeId": 1,
+                    "progress": 12,
+                    "rating": 5
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "番剧不存在或当前用户未收藏该番剧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "番剧不存在": {
+                    "summary": "番剧不存在",
+                    "value": {
+                      "code": 404,
+                      "message": "番剧不存在",
+                      "data": null
+                    }
+                  },
+                  "收藏不存在": {
+                    "summary": "收藏不存在",
+                    "value": {
+                      "code": 404,
+                      "message": "收藏不存在",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/collections/anime/{animeId}/progress": {
+      "patch": {
+        "summary": "修改当前用户对指定番剧的追番进度",
+        "deprecated": false,
+        "description": "当前登录用户修改自己已收藏番剧的追番进度。适用于收藏页或详情页中的“看到第几集”更新操作。",
+        "tags": [
+          "用户端-收藏"
+        ],
+        "parameters": [
+          {
+            "name": "animeId",
+            "in": "path",
+            "description": "番剧 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCollectionProgressRequest"
+              },
+              "example": {
+                "progress": 13
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改追番进度成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改追番进度成功",
+                  "data": {
+                    "id": 5,
+                    "userId": 1,
+                    "animeId": 1,
+                    "progress": 13,
+                    "rating": 5
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "进度不合法或超过总集数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "进度超出总集数": {
+                    "summary": "进度超出总集数",
+                    "value": {
+                      "code": 400,
+                      "message": "观看进度不能超过总集数",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "404": {
+            "description": "番剧不存在或当前用户未收藏该番剧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "番剧不存在": {
+                    "summary": "番剧不存在",
+                    "value": {
+                      "code": 404,
+                      "message": "番剧不存在",
+                      "data": null
+                    }
+                  },
+                  "收藏不存在": {
+                    "summary": "收藏不存在",
+                    "value": {
+                      "code": 404,
+                      "message": "收藏不存在",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/collections/{id}": {
+      "delete": {
+        "summary": "删除收藏",
+        "deprecated": false,
+        "description": "当前登录用户删除自己的收藏记录；管理员也可执行该操作。",
+        "tags": [
+          "用户端-收藏"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "收藏记录 ID",
+            "required": true,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除收藏成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "删除收藏成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "description": "仅收藏所属用户本人或管理员可操作",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 403,
+                  "message": "你只能操作自己的收藏",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "收藏不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "收藏不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "summary": "分页查询用户列表",
+        "deprecated": false,
+        "description": "仅管理员可用。后台按用户名、角色、状态筛选用户列表。",
+        "tags": [
+          "管理端-用户管理"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "description": "用户名模糊搜索关键字",
+            "required": false,
+            "example": "misaka",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "用户角色筛选，0 表示普通用户，1 表示管理员",
+            "required": false,
+            "example": 0,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "用户状态筛选，0 表示禁用，1 表示正常",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessUserPage",
+            "description": "用户分页查询成功"
+          },
+          "400": {
+            "description": "查询参数不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "角色值错误": {
+                    "summary": "角色值错误",
+                    "value": {
+                      "code": 400,
+                      "message": "用户角色不合法",
+                      "data": null
+                    }
+                  },
+                  "状态值错误": {
+                    "summary": "状态值错误",
+                    "value": {
+                      "code": 400,
+                      "message": "用户状态不合法",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}": {
+      "get": {
+        "summary": "查询用户详情",
+        "deprecated": false,
+        "description": "仅管理员可用。查询指定用户的详细资料和当前状态。",
+        "tags": [
+          "管理端-用户管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "用户 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessProfile",
+            "description": "用户资料查询成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "用户不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "用户不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}/status": {
+      "patch": {
+        "summary": "修改用户状态",
+        "deprecated": false,
+        "description": "仅管理员可用。用于启用或禁用用户账号。用户被禁用后，旧令牌也会失效。",
+        "tags": [
+          "管理端-用户管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "用户 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserStatusRequest"
+              },
+              "example": {
+                "status": 0
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改用户状态成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改用户状态成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "用户不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "用户不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}/role": {
+      "patch": {
+        "summary": "修改用户角色",
+        "deprecated": false,
+        "description": "仅管理员可用。将普通用户提升为管理员，或将管理员调整为普通用户。",
+        "tags": [
+          "管理端-用户管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "用户 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRoleRequest"
+              },
+              "example": {
+                "role": 1
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改用户角色成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改用户角色成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "用户不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "用户不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}/password/reset": {
+      "patch": {
+        "summary": "重置用户密码",
+        "deprecated": false,
+        "description": "仅管理员可用。直接为指定用户重置密码，无需旧密码校验。",
+        "tags": [
+          "管理端-用户管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "用户 ID",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminResetPasswordRequest"
+              },
+              "example": {
+                "newPassword": 11223344
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "重置用户密码成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "管理员重置密码成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "用户不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "用户不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/comments": {
+      "get": {
+        "summary": "分页查询评论列表",
+        "deprecated": false,
+        "description": "仅管理员可用。后台查询全部评论，可按番剧、用户、状态、关键字筛选。",
+        "tags": [
+          "管理端-评论管理"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10
+            }
+          },
+          {
+            "name": "animeId",
+            "in": "query",
+            "description": "按番剧 ID 筛选评论",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "按用户 ID 筛选评论",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "评论状态筛选，0 表示隐藏，1 表示显示",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "评论内容关键字模糊搜索",
+            "required": false,
+            "example": "精彩",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessCommentPage",
+            "description": "评论分页查询成功"
+          },
+          "400": {
+            "description": "查询参数不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "状态值错误": {
+                    "summary": "状态值错误",
+                    "value": {
+                      "code": 400,
+                      "message": "评论状态不合法",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/comments/{id}/status": {
+      "patch": {
+        "summary": "修改评论显示状态",
+        "deprecated": false,
+        "description": "仅管理员可用。用于隐藏或恢复某条评论的显示状态。",
+        "tags": [
+          "管理端-评论管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentStatusRequest"
+              },
+              "example": {
+                "status": 0
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "修改评论状态成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "修改评论状态成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/comments/status/batch": {
+      "patch": {
+        "summary": "批量修改评论状态",
+        "deprecated": false,
+        "description": "仅管理员可用。批量隐藏或恢复多条评论，适用于集中审核。",
+        "tags": [
+          "管理端-评论管理"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchUpdateCommentStatusRequest"
+              },
+              "example": {
+                "ids": [
+                  10,
+                  11
+                ],
+                "status": 0
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "批量修改评论状态成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "批量修改评论状态成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "部分评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "部分评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/comments/{id}": {
+      "delete": {
+        "summary": "删除任意评论",
+        "deprecated": false,
+        "description": "仅管理员可用。根据评论 ID 直接删除任意评论记录。",
+        "tags": [
+          "管理端-评论管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "评论 ID",
+            "required": true,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除评论成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "管理员删除评论成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "评论不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "评论不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/collections": {
+      "get": {
+        "summary": "分页查询收藏列表",
+        "deprecated": false,
+        "description": "仅管理员可用。后台查询全部收藏记录，可按用户、番剧、评分范围筛选。",
+        "tags": [
+          "管理端-收藏管理"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，从 1 开始",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "按用户 ID 筛选收藏记录",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "animeId",
+            "in": "query",
+            "description": "按番剧 ID 筛选收藏记录",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "minRating",
+            "in": "query",
+            "description": "最低评分，范围 1 到 5",
+            "required": false,
+            "example": 4,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          {
+            "name": "maxRating",
+            "in": "query",
+            "description": "最高评分，范围 1 到 5，且不能小于 minRating",
+            "required": false,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessCollectionPage",
+            "description": "收藏分页查询成功"
+          },
+          "400": {
+            "description": "查询参数不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "最低评分过大": {
+                    "summary": "最低评分过大",
+                    "value": {
+                      "code": 400,
+                      "message": "最低评分不能大于 5",
+                      "data": null
+                    }
+                  },
+                  "评分区间错误": {
+                    "summary": "评分区间错误",
+                    "value": {
+                      "code": 400,
+                      "message": "最低评分不能大于最高评分",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/collections/{id}": {
+      "delete": {
+        "summary": "删除任意收藏",
+        "deprecated": false,
+        "description": "仅管理员可用。根据收藏 ID 删除任意收藏记录。",
+        "tags": [
+          "管理端-收藏管理"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "收藏记录 ID",
+            "required": true,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除收藏成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "管理员删除收藏成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "收藏不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "收藏不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/collections/batch": {
+      "delete": {
+        "summary": "批量删除收藏",
+        "deprecated": false,
+        "description": "仅管理员可用。按收藏 ID 列表批量删除收藏记录。",
+        "tags": [
+          "管理端-收藏管理"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchDeleteCollectionsRequest"
+              },
+              "example": {
+                "ids": [
+                  5,
+                  6
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "批量删除收藏成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "批量删除收藏成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "请求参数错误或校验失败"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "404": {
+            "description": "部分收藏不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 404,
+                  "message": "部分收藏不存在",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/upload": {
+      "post": {
+        "summary": "通用文件上传",
+        "deprecated": false,
+        "description": "登录用户通用文件上传接口。适用于用户头像、番剧海报及未来评论图片等资源上传。后端负责将文件写入静态资源目录，并返回前端可直接访问的完整 URL。推荐前端先调用本接口，再将返回 URL 写入 `avatarUrl`、`posterUrl` 等业务字段。",
+        "tags": [
+          "通用-文件上传"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "image/jpeg, image/png, image/webp"
+                }
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "待上传的文件内容，建议上传 jpg、jpeg、png、webp 等常见图片格式",
+                    "example": ""
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "文件业务类型，可选；用于生成子目录。未传时默认为 common，常见值包括 avatar、poster、common",
+                    "default": "common",
+                    "examples": [
+                      "avatar"
+                    ],
+                    "example": "avatar"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "文件上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": "http://127.0.0.1:9000/avatar/2026/550e8400-e29b-41d4-a716-446655440000.jpg"
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "文件为空、文件类型不支持、文件类型参数不合法或文件过大",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "文件为空": {
+                    "summary": "文件为空",
+                    "value": {
+                      "code": 400,
+                      "message": "文件不能为空",
+                      "data": null
+                    }
+                  },
+                  "文件类型不受支持": {
+                    "summary": "文件类型不受支持",
+                    "value": {
+                      "code": 400,
+                      "message": "文件类型不受支持",
+                      "data": null
+                    }
+                  },
+                  "文件业务类型不合法": {
+                    "summary": "文件业务类型不合法",
+                    "value": {
+                      "code": 400,
+                      "message": "文件类型参数不合法",
+                      "data": null
+                    }
+                  },
+                  "文件过大": {
+                    "summary": "文件过大",
+                    "value": {
+                      "code": 400,
+                      "message": "文件过大",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "未登录、令牌无效或登录状态失效"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "无权限访问"
+          },
+          "500": {
+            "description": "文件存储失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 500,
+                  "message": "文件存储失败",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "title": "用户登录请求",
+        "description": "用户登录时提交的用户名和密码",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "登录用户名",
+            "maxLength": 50
+          },
+          "password": {
+            "type": "string",
+            "description": "登录密码",
+            "maxLength": 100
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "title": "用户注册请求",
+        "description": "用户注册时提交的基础资料",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "注册用户名，长度 3 到 50 个字符",
+            "minLength": 3,
+            "maxLength": 50
+          },
+          "password": {
+            "type": "string",
+            "description": "注册密码，长度 6 到 100 个字符",
+            "minLength": 6,
+            "maxLength": 100
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "用户头像地址，可选；建议先调用通用上传接口 `/upload`，再将返回的完整图片 URL 填入该字段",
+            "maxLength": 255
+          },
+          "bio": {
+            "type": "string",
+            "description": "用户个人简介，可选",
+            "maxLength": 300
+          }
+        }
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "title": "修改个人资料请求",
+        "description": "当前登录用户修改个人资料时提交的内容",
+        "required": [
+          "username"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "修改后的用户名",
+            "minLength": 3,
+            "maxLength": 50
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "修改后的头像地址；建议先调用通用上传接口 `/upload`，再将返回的完整图片 URL 填入该字段",
+            "maxLength": 255
+          },
+          "bio": {
+            "type": "string",
+            "description": "修改后的个人简介",
+            "maxLength": 300
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "title": "修改密码请求",
+        "description": "当前登录用户修改密码时提交的旧密码和新密码",
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ],
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "description": "当前旧密码",
+            "maxLength": 100
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "新密码，长度 6 到 100 个字符",
+            "minLength": 6,
+            "maxLength": 100
+          }
+        }
+      },
+      "UpdateUserStatusRequest": {
+        "type": "object",
+        "title": "修改用户状态请求",
+        "description": "管理员设置用户启用或禁用状态",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "目标状态，0 表示禁用，1 表示启用",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "UpdateUserRoleRequest": {
+        "type": "object",
+        "title": "修改用户角色请求",
+        "description": "管理员设置用户角色",
+        "required": [
+          "role"
+        ],
+        "properties": {
+          "role": {
+            "type": "integer",
+            "description": "目标角色，0 表示普通用户，1 表示管理员",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "AdminResetPasswordRequest": {
+        "type": "object",
+        "title": "管理员重置密码请求",
+        "description": "管理员直接重置指定用户密码",
+        "required": [
+          "newPassword"
+        ],
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "description": "管理员为用户设置的新密码",
+            "minLength": 6,
+            "maxLength": 100
+          }
+        }
+      },
+      "AnimeRequest": {
+        "type": "object",
+        "title": "番剧写入请求",
+        "description": "新增或修改番剧时提交的资料",
+        "required": [
+          "title",
+          "status"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "番剧标题",
+            "maxLength": 100
+          },
+          "posterUrl": {
+            "type": "string",
+            "description": "番剧海报图片地址；建议先调用通用上传接口 `/upload`，再将返回的完整图片 URL 填入该字段",
+            "maxLength": 500
+          },
+          "tags": {
+            "type": "string",
+            "description": "番剧标签，建议使用逗号分隔多个标签，例如“奇幻,冒险,治愈”",
+            "maxLength": 255
+          },
+          "studios": {
+            "type": "string",
+            "description": "番剧制作公司，建议使用逗号分隔多个公司名称",
+            "maxLength": 255
+          },
+          "rating": {
+            "type": "number",
+            "format": "decimal",
+            "description": "番剧综合评分。当前版本支持直接手动填写，范围 0.0 到 5.0，可填写类似 4.8 的值",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "totalEpisodes": {
+            "type": "integer",
+            "description": "番剧总集数",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "releaseDate": {
+            "type": "string",
+            "format": "date",
+            "description": "番剧开播日期，格式为 YYYY-MM-DD"
+          },
+          "description": {
+            "type": "string",
+            "description": "番剧简介",
+            "maxLength": 1000
+          },
+          "status": {
+            "type": "integer",
+            "description": "番剧状态，1 表示已完结，2 表示连载中",
+            "enum": [
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "CommentCreateRequest": {
+        "type": "object",
+        "title": "发表评论请求",
+        "description": "用户创建评论时提交的内容",
+        "required": [
+          "animeId",
+          "content"
+        ],
+        "properties": {
+          "animeId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "评论所属番剧 ID",
+            "minimum": 1
+          },
+          "parentId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "父评论 ID，回复评论时填写；顶级评论可不填",
+            "minimum": 1
+          },
+          "content": {
+            "type": "string",
+            "description": "评论内容",
+            "maxLength": 1000
+          }
+        }
+      },
+      "CommentUpdateRequest": {
+        "type": "object",
+        "title": "修改评论请求",
+        "description": "用户或管理员修改评论时提交的新内容",
+        "required": [
+          "content"
+        ],
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "修改后的评论内容",
+            "maxLength": 1000
+          }
+        }
+      },
+      "UpdateCommentStatusRequest": {
+        "type": "object",
+        "title": "修改评论状态请求",
+        "description": "管理员设置评论显示或隐藏状态",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "评论状态，0 表示隐藏，1 表示显示",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "BatchUpdateCommentStatusRequest": {
+        "type": "object",
+        "title": "批量修改评论状态请求",
+        "description": "管理员批量设置评论状态",
+        "required": [
+          "ids",
+          "status"
+        ],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "description": "需要批量处理的评论 ID 列表",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          "status": {
+            "type": "integer",
+            "description": "目标评论状态，0 表示隐藏，1 表示显示",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "CollectionCreateRequest": {
+        "type": "object",
+        "title": "新增收藏请求",
+        "description": "用户收藏番剧时提交的番剧、进度和评分信息",
+        "required": [
+          "animeId"
+        ],
+        "properties": {
+          "animeId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "要收藏的番剧 ID",
+            "minimum": 1
+          },
+          "progress": {
+            "type": "integer",
+            "description": "当前观看进度，可选",
+            "minimum": 0
+          },
+          "rating": {
+            "type": "integer",
+            "description": "当前评分，可选，范围 1 到 5",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "BatchDeleteCollectionsRequest": {
+        "type": "object",
+        "title": "批量删除收藏请求",
+        "description": "管理员按收藏 ID 列表批量删除收藏记录",
+        "required": [
+          "ids"
+        ],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "description": "需要批量删除的收藏 ID 列表",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "UpdateCollectionProgressRequest": {
+        "type": "object",
+        "title": "修改追番进度请求",
+        "description": "用户修改自己某部已收藏番剧的当前追番进度",
+        "required": [
+          "progress"
+        ],
+        "properties": {
+          "progress": {
+            "type": "integer",
+            "description": "最新追番进度，不能小于 0，且不能超过该番剧总集数（如果已设置总集数）",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "responses": {
+      "SuccessAuth": {
+        "description": "认证成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "登录成功",
+                  "data": {
+                    "token": "eyJhbGciOiJIUzI1NiJ9.demo.token",
+                    "user": {
+                      "id": 1,
+                      "username": "御坂10032",
+                      "avatarUrl": "https://cdn.example.com/avatar/misaka.jpg",
+                      "bio": "超电磁炮爱好者",
+                      "role": 0,
+                      "status": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessProfile": {
+        "description": "用户资料查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "id": 1,
+                    "username": "御坂10032",
+                    "avatarUrl": "https://cdn.example.com/avatar/misaka.jpg",
+                    "bio": "超电磁炮爱好者",
+                    "role": 0,
+                    "status": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessUserPage": {
+        "description": "用户分页查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "records": [
+                      {
+                        "id": 1,
+                        "username": "御坂10032",
+                        "avatarUrl": "https://cdn.example.com/avatar/misaka.jpg",
+                        "bio": "超电磁炮爱好者",
+                        "role": 0,
+                        "status": 1
+                      }
+                    ],
+                    "total": 1,
+                    "size": 10,
+                    "current": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessAnimePage": {
+        "description": "番剧分页查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "records": [
+                      {
+                        "id": 1,
+                        "title": "葬送的芙莉莲",
+                        "posterUrl": "http://127.0.0.1:9000/poster/2026/frieren.jpg",
+                        "tags": "奇幻,冒险,治愈",
+                        "studios": "Madhouse",
+                        "rating": 4.8,
+                        "totalEpisodes": 28,
+                        "releaseDate": "2023-09-29T00:00:00.000Z",
+                        "description": "勇者一行人打倒魔王之后的旅途故事。",
+                        "status": 2
+                      }
+                    ],
+                    "total": 1,
+                    "size": 5,
+                    "current": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessAnimeDetail": {
+        "description": "番剧详情查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "id": 1,
+                    "title": "葬送的芙莉莲",
+                    "posterUrl": "http://127.0.0.1:9000/poster/2026/frieren.jpg",
+                    "tags": "奇幻,冒险,治愈",
+                    "studios": "Madhouse",
+                    "rating": 4.8,
+                    "totalEpisodes": 28,
+                    "releaseDate": "2023-09-29T00:00:00.000Z",
+                    "description": "勇者一行人打倒魔王之后的旅途故事。",
+                    "status": 2
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessCommentPage": {
+        "description": "评论分页查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "records": [
+                      {
+                        "id": 10,
+                        "userId": 1,
+                        "animeId": 1,
+                        "parentId": null,
+                        "content": "这部番的结局处理得很完整。",
+                        "likesCount": 0,
+                        "status": 1
+                      }
+                    ],
+                    "total": 1,
+                    "size": 10,
+                    "current": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessCommentDetail": {
+        "description": "评论详情查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "id": 10,
+                    "userId": 1,
+                    "animeId": 1,
+                    "parentId": null,
+                    "content": "这部番的结局处理得很完整。",
+                    "likesCount": 0,
+                    "status": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessCollectionPage": {
+        "description": "收藏分页查询成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "成功",
+                  "data": {
+                    "records": [
+                      {
+                        "id": 5,
+                        "userId": 1,
+                        "animeId": 1,
+                        "progress": 12,
+                        "rating": 5
+                      }
+                    ],
+                    "total": 1,
+                    "size": 10,
+                    "current": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessMessage": {
+        "description": "操作成功",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 200,
+                  "message": "操作成功",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "请求参数错误或校验失败",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 400,
+                  "message": "参数校验失败",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "未登录、令牌无效或登录状态失效",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 401,
+                  "message": "请先登录",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "无权限访问",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 403,
+                  "message": "无权限访问",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "资源不存在",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            },
+            "examples": {
+              "成功示例": {
+                "summary": "成功示例",
+                "value": {
+                  "code": 404,
+                  "message": "资源不存在",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "servers": [],
+  "security": []
+}

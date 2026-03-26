@@ -1,18 +1,38 @@
-import React from 'react';
-import { Layout, Row, Col, theme } from 'antd';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import React, { useEffect, useState } from 'react';
+import { Layout, Row, Col, theme, Spin, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
-import { mockAnimes, getUpdateInfo } from '../data/mockData';
+import { getUpdateInfo } from '../utils/animeUtils'; // Helper still useful
+import animeService from '../services/animeService';
+import type { Anime } from '../data/Model';
 import heroImage from '../assets/background.jpg';
 
 const { Content, Footer } = Layout;
 
 const HomePage: React.FC = () => {
     const { token } = theme.useToken();
-    const navigate = useNavigate(); // Initialize hook
+    const navigate = useNavigate();
+    const [animes, setAnimes] = useState<Anime[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // 只展示热门的（status=2 完结的或者 id<10 的经典）
-    const displayAnimes = mockAnimes.filter(a => a.status === 2 || a.id < 10);
+    useEffect(() => {
+        const fetchAnimes = async () => {
+            try {
+                // Fetch popular/completed animes (Simulated by status=2 or just a general fetch for now)
+                const { list } = await animeService.getAnimes(1, 20); 
+                // For demo, if list is empty, falling back might be confusing, so let's just use what we get.
+                // Or filter locally if backend doesn't support specific filters yet.
+                setAnimes(list);
+            } catch (error) {
+                console.error('Failed to fetch animes', error);
+                message.error('无法获取番剧列表');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAnimes();
+    }, []);
 
     return (
         <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent', position: 'relative' }}>
@@ -79,28 +99,34 @@ const HomePage: React.FC = () => {
                         <span style={{ color: token.colorLink, cursor: 'pointer', fontSize: '16px' }}>查看更多 {'>'}</span>
                     </div>
 
-                    <Row gutter={[20, 24]}>
-                        {displayAnimes.map((anime) => (
-                            <Col
-                                xs={24}
-                                sm={12}
-                                md={8}
-                                lg={6}
-                                xl={4}
-                                xxl={4}
-                                key={anime.id}
-                            >
-                                <AnimeCard
-                                    title={anime.title}
-                                    poster={anime.poster_url}
-                                    rating={anime.rating}
-                                    tags={anime.tags.map(t => t.name)}
-                                    updateInfo={getUpdateInfo(anime)}
-                                    onClick={() => navigate(`/anime/${anime.id}`)} // Add navigation
-                                />
-                            </Col>
-                        ))}
-                    </Row>
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '50px' }}>
+                            <Spin size="large" />
+                        </div>
+                    ) : (
+                        <Row gutter={[20, 24]}>
+                            {animes.map((anime) => (
+                                <Col
+                                    xs={24}
+                                    sm={12}
+                                    md={8}
+                                    lg={6}
+                                    xl={4}
+                                    xxl={4}
+                                    key={anime.id}
+                                >
+                                    <AnimeCard
+                                        title={anime.title}
+                                        poster={anime.poster_url}
+                                        rating={anime.rating}
+                                        tags={anime.tags ? anime.tags.map(t => t.name) : []}
+                                        updateInfo={getUpdateInfo(anime)}
+                                        onClick={() => navigate(`/anime/${anime.id}`)}
+                                    />
+                                </Col>
+                            ))}
+                        </Row>
+                    )}
                 </div>
             </Content>
 

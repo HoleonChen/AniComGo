@@ -10,6 +10,12 @@ import AnimeDetailPage from './pages/AnimeDetailPage'; // Import AnimeDetailPage
 import SearchPage from './pages/SearchPage';
 import NavPage from './pages/NavPage';
 import LoginModal from './components/LoginModal';
+import AdminLayout from './layout/AdminLayout';
+import AdminRoute from './components/AdminRoute';
+import AdminDashboard from './pages/admin/Dashboard';
+import AnimeMgt from './pages/admin/AnimeMgt';
+import UserMgt from './pages/admin/UserMgt';
+import CommentAudit from './pages/admin/CommentAudit';
 
 const App: React.FC = () => {
     const [isDarkMode, setIsDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -36,6 +42,17 @@ const App: React.FC = () => {
         >
             <AuthProvider>
                 <Routes>
+                    {/* Admin Routes */}
+                    <Route element={<AdminRoute />}>
+                        <Route path="admin" element={<AdminLayout />}>
+                            <Route index element={<AdminDashboard />} />
+                            <Route path="anime" element={<AnimeMgt />} />
+                            <Route path="users" element={<UserMgt />} />
+                            <Route path="comments" element={<CommentAudit />} />
+                        </Route>
+                    </Route>
+
+                    {/* User Routes */}
                     <Route element={<NavPage />}>
                         <Route index element={<HomePage />} />
                         <Route path="season" element={<SeasonPage />} />

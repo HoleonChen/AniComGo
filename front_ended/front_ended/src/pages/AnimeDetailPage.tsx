@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Layout, Typography, Row, Col, Card, Tag, Rate, Breadcrumb, List, Avatar, Divider, theme, Descriptions, Button, Input, Space, Tooltip, Modal, message, Pagination } from 'antd';
-import { UserOutlined, LikeOutlined, LikeFilled, MessageOutlined } from '@ant-design/icons';
-import { mockAnimes, mockComments, mockUserCollections } from '../data/mockData';
-import { type Comment, getRatingLevel } from '../data/Model';
+import { Layout, Typography, Row, Col, Card, Tag, Rate, Breadcrumb, List, Avatar, Divider, theme, Descriptions, Button, Input, Space, Modal, message, Spin } from 'antd';
+import { UserOutlined, LikeOutlined, LikeFilled, MessageOutlined, PlusOutlined, CheckOutlined } from '@ant-design/icons';
+import { type Comment, type Anime, type Collection, getRatingLevel } from '../data/Model';
+import animeService from '../services/animeService';
+import userService from '../services/userService'; // Import userService
+import commentService from '../services/commentService'; // Import commentService
+import { useAuth } from '../context/AuthContext';
 
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;
@@ -13,52 +16,82 @@ const AnimeDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { token } = theme.useToken();
-    const [anime, setAnime] = useState(mockAnimes.find(a => a.id === Number(id)) || mockAnimes[0]);
-    const [isFollowed, setIsFollowed] = useState(false);
+    const { user, openLoginModal } = useAuth(); // Get current user & modal
+    const [anime, setAnime] = useState<Anime | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [collection, setCollection] = useState<Collection | null>(null); // Track user collection status
 
-    // Mock comments data structure based on provided schema
+    // Comments data
     const [comments, setComments] = useState<Comment[]>([]);
     
     // Pagination and reply state
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [replyContent, setReplyContent] = useState('');
 
-    useEffect(() => {
-        // Check if anime is in watchlist
-        const found = mockUserCollections.find(c => c.anime_id === Number(id));
-        setIsFollowed(!!found);
+    const loadAnimeData = async () => {
+        if (!id) return;
+        setLoading(true);
+        try {
+            // Parallel fetch for anime detail and user context (if logged in)
+            const [animeData] = await Promise.all([
+               animeService.getAnimeById(Number(id)),
+            ]);
 
-        // Load comments for this anime (simulated)
-        // In real app, this would be an API call filtered by anime_id
-        // For mock, we just filter the static mockComments or just show all if we only have sample data
-        // Let's filter by anime_id if possible, but our mockComments currently are hardcoded for anime 1.
-        // Let's just use mockComments for simplicity, or filter if we added IDs.
-        // The mockComments in mockData.ts has anime_id: 1. Let's make it generic or filter it.
-        // If current anime.id matches, show them.
-        
-        const animeId = Number(id);
-        const filteredComments = mockComments.filter(c => c.anime_id === animeId);
-        
-        // If no comments found for this anime (e.g. other than id=1), we can either show empty 
-        // or just show all mock comments for demo purposes if desired. 
-        // Given this is a prototype, I'll default to showing all mockComments if filtered is empty 
-        // to ensure the UI is populated for review, or better, just use all mockComments.
-        // Let's stick to filtering to be realistic, but if empty, maybe show the demo ones?
-        // Let's just use mockComments for now as the user asked to move "this page's mock data".
-        
-        if (filteredComments.length > 0) {
-            setComments(filteredComments);
-        } else {
-             // Fallback for demo: show comments even if ID doesn't match, so every page has comments
-             setComments(mockComments);
+            if (animeData) {
+                setAnime(animeData);
+                
+                // Fetch Collection Status if logged in
+                if (user) {
+                    try {
+                        // Fetch collections filtering by this anime ID
+                        // Note: Assuming getCollections supports filtering or returns small enough list to find it
+                        const myCollections = await userService.getCollections(1, 100, Number(id)); // Pass animeID
+                        const found = myCollections.find(c => c.anime_id === Number(id));
+                        if (found) {
+                            setCollection(found);
+                        }
+                    } catch (e) {
+                        console.error("Failed to check collection status", e);
+                    }
+                }
+
+                // Fetch Comments
+                try {
+                    const commentData = await commentService.getComments(1, 100, Number(id));
+                    let loadedComments = commentData.list;
+
+                    // If user is logged in, fetch like-status for each comment
+                    if (user && loadedComments.length > 0) {
+                        loadedComments = await Promise.all(loadedComments.map(async (c) => {
+                            const status = await commentService.getCommentLikeStatus(c.id);
+                            return {
+                                ...c,
+                                isLiked: status.liked || false,
+                                likes_count: status.likesCount !== undefined ? status.likesCount : c.likes_count,
+                            };
+                        }));
+                    }
+                    setComments(loadedComments);
+                } catch (e) {
+                     console.error("Failed to load comments", e);
+                }
+
+            } else {
+                message.error('番剧不存在');
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Failed to fetch anime detail', error);
+            message.error('加载失败');
+        } finally {
+            setLoading(false);
         }
-    }, [id]);
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
     };
+
+    useEffect(() => {
+        loadAnimeData();
+    }, [id, navigate, user]); // Re-run if user logs in
+
 
     const handleReply = (commentId: number) => {
         if (replyingTo === commentId) {
@@ -70,100 +103,156 @@ const AnimeDetailPage: React.FC = () => {
         }
     };
 
-    const submitReply = (parentId: number) => {
+    const submitReply = async (parentId: number | null) => {
+        if (!user) {
+            message.warning('请先登录');
+            return;
+        }
         if (!replyContent.trim()) {
             message.warning('请输入回复内容');
             return;
         }
+        if (!anime) return;
         
-        const newComment: Comment = {
-            id: Date.now(),
-            user_id: 1, // Mock current user
-            anime_id: anime.id,
-            parent_id: parentId,
-            content: replyContent,
-            likes_count: 0,
-            status: 1,
-            created_at: new Date().toLocaleString(),
-            updated_at: new Date().toLocaleString(),
-            user: {
-                username: 'CurrentUser',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=currentUser'
-            },
-            isLiked: false
-        };
-
-        // Add to mock data (simulating backend)
-        mockComments.unshift(newComment);
-        
-        // Update local state - keeping it simple for now (just appending to top)
-        // In a real app with pagination, this might go to the end or require a re-fetch.
-        // For replies, usually they are nested. Here we are just adding to the list.
-        // If we want nested, we need to restructure. But for "reply functionality" in a flat list context:
-        // We will just add it.
-        const newComments = [newComment, ...comments];
-        setComments(newComments);
-        
-        setReplyingTo(null);
-        setReplyContent('');
-        message.success('回复成功');
+        try {
+            const success = await commentService.addComment(anime.id, replyContent, parentId || undefined);
+            if (success) {
+                message.success('回复成功');
+                setReplyContent('');
+                setReplyingTo(null);
+                // Refresh comments
+                const commentData = await commentService.getComments(1, 100, anime.id);
+                let loadedComments = commentData.list;
+                if (user && loadedComments.length > 0) {
+                    loadedComments = await Promise.all(loadedComments.map(async (c) => {
+                        const status = await commentService.getCommentLikeStatus(c.id);
+                        return {
+                            ...c,
+                            isLiked: status.liked || false,
+                            likes_count: status.likesCount !== undefined ? status.likesCount : c.likes_count,
+                        };
+                    }));
+                }
+                setComments(loadedComments);
+            } else {
+                message.error('回复失败');
+            }
+        } catch(e) {
+             message.error('回复失败');
+        }
     };
     
-    const handleLike = (commentId: number) => {
-        setComments(prev => prev.map(c => {
-            if (c.id === commentId) {
-                const newIsLiked = !c.isLiked;
-                return {
-                    ...c,
-                    isLiked: newIsLiked,
-                    likes_count: c.likes_count + (newIsLiked ? 1 : -1)
-                };
+    const handleLike = async (commentId: number) => {
+        if (!user) {
+            message.warning('请先登录');
+            return;
+        }
+
+        const comment = comments.find(c => c.id === commentId);
+        if (!comment) return;
+
+        try {
+            let result;
+            if (comment.isLiked) {
+                result = await commentService.unlikeComment(commentId);
+            } else {
+                result = await commentService.likeComment(commentId);
             }
-            return c;
-        }));
+
+            if (result.likesCount !== undefined && result.liked !== undefined) {
+                setComments(prev => prev.map(c => 
+                    c.id === commentId ? { ...c, likes_count: result.likesCount!, isLiked: result.liked } : c
+                ));
+            } else {
+                 message.error(comment.isLiked ? '取消点赞失败' : '点赞失败');
+            }
+        } catch (error) {
+             message.error('操作失败');
+        }
     };
 
     useEffect(() => {
-        const found = mockAnimes.find(a => a.id === Number(id));
-        if (found) {
-            setAnime(found);
-        }
         window.scrollTo(0, 0);
     }, [id]);
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Spin size="large" />
+            </div>
+        );
+    }
 
     if (!anime) return null;
 
     const levelInfo = getRatingLevel(anime.rating);
 
-    const handleFollowClick = () => {
-        if (isFollowed) {
+    const handleFollowClick = async () => {
+        if (!user) {
+             openLoginModal();
+             return;
+        }
+
+        if (collection) {
             Modal.confirm({
                 title: '你确认要取消追番吗？',
-                onOk: () => {
-                    // Logic to remove from mockUserCollections
-                    const index = mockUserCollections.findIndex(c => c.anime_id === anime.id);
-                    if (index > -1) {
-                        mockUserCollections.splice(index, 1);
-                        setIsFollowed(false);
-                        message.success('已取消追番');
-                    }
+                onOk: async () => {
+                   const success = await userService.removeCollection(collection.id);
+                   if (success) {
+                       setCollection(null);
+                       message.success('已取消追番');
+                   } else {
+                       message.error('操作失败');
+                   }
                 }
             });
         } else {
-            // Logic to add to mockUserCollections
-            mockUserCollections.push({
-                id: Date.now(),
-                user_id: 1, // Mock user ID
-                anime_id: anime.id,
-                progress: 0,
-                rating: 0,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                anime: anime // Include the anime object for display purposes in WatchListPage
-            });
-            setIsFollowed(true);
-            message.success('已加入追番列表');
+            const success = await userService.addCollection(anime.id);
+            if (success) {
+                // Refresh to get ID
+                try {
+                     const myCollections = await userService.getCollections(1, 100, anime.id);
+                     const found = myCollections.find(c => c.anime_id === anime.id);
+                     if (found) setCollection(found);
+                     message.success('已加入追番列表');
+                } catch(e) {
+                    // Fallback mock check passing
+                    setCollection({ id: 0, anime_id: anime.id, user_id: user.id || 0, progress: 0, rating: 0, created_at: '', updated_at: '' });
+                }
+            } else {
+                message.error('操作失败');
+            }
         }
+    };
+
+    const handleRateChange = async (value: number) => {
+        if (!user) {
+             openLoginModal();
+             return;
+        }
+        if (!collection) {
+              message.warning('请先加入追番列表后再评分');
+              return;
+        }
+        
+        Modal.confirm({
+            title: `确定给这部番剧 ${value} 分吗？`,
+            content: '这也将同步更新您的观看进度状态。', // Or just confirm
+            onOk: async () => {
+                const success = await userService.updateCollection(collection.id, {
+                    animeId: anime.id,
+                    rating: value,
+                    progress: collection.progress // Keep progress same
+                });
+                
+                if (success) {
+                    message.success('评分成功');
+                    setCollection({ ...collection, rating: value });
+                } else {
+                    message.error('评分失败');
+                }
+            }
+        });
     };
 
     return (
@@ -218,13 +307,38 @@ const AnimeDetailPage: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* 按钮操作区 */}
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+                            <Button 
+                                type="primary" 
+                                size="large" 
+                                icon={collection ? <CheckOutlined /> : <PlusOutlined />}
+                                onClick={handleFollowClick}
+                                style={{ 
+                                    minWidth: '140px',
+                                    height: '48px',
+                                    borderRadius: '24px',
+                                    fontSize: '16px',
+                                    boxShadow: '0 4px 15px rgba(255, 103, 154, 0.3)'
+                                }}
+                            >
+                                {collection ? '已追番' : '追番'}
+                            </Button>
+                            
+                            {/* Rating Button with Popover or just inline if cleaner */}
+                             <div style={{ display: 'flex', alignItems: 'center', background: token.colorBgContainer, padding: '0 16px', borderRadius: '24px', height: '48px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                                <span style={{ marginRight: '8px', color: token.colorTextSecondary }}>我的评分:</span>
+                                <Rate value={collection?.rating || 0} onChange={handleRateChange} disabled={!collection} />
+                             </div>
+                        </div>
+
                         {/* 剧情简介 */}
                         <section style={{ marginBottom: '32px' }}>
                             <Title level={3}>简介</Title>
                             <Paragraph style={{ fontSize: '16px', lineHeight: '1.8' }}>
                                 {anime.description}
                                 <br /><br />
-                                (这里是模拟的更多剧情文本) 故���发生在一个充满奇幻色彩的世界中，名为“艾尔利亚”的大陆上，人类与各种神奇生物共存。主角原本是一个普通的少年，直到有一天他发现了自己隐藏的魔法天赋...
+                                (这里是模拟的更多剧情文本) 故事发生在一个充满奇幻色彩的世界中，名为“艾尔利亚”的大陆上，人类与各种神奇生物共存。主角原本是一个普通的少年，直到有一天他发现了自己隐藏的魔法天赋...
                                 随着冒险的深入，通过无数次的战斗与羁绊，主角逐渐揭开了关于世界起源的惊人秘密。
                             </Paragraph>
                         </section>
@@ -304,19 +418,24 @@ const AnimeDetailPage: React.FC = () => {
                             {/* 输入框区域 */}
                             <Card bordered={false} style={{ marginBottom: '24px', background: token.colorBgContainer, padding: '16px' }} bodyStyle={{ padding: 0 }}>
                                 <div style={{ display: 'flex', gap: '16px' }}>
-                                    <Avatar size="large" icon={<UserOutlined />} style={{ backgroundColor: token.colorPrimary }} />
+                                    <Avatar size="large" icon={<UserOutlined />} src={user?.avatar_url} style={{ backgroundColor: token.colorPrimary }} />
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                             <span style={{ fontWeight: 500 }}>为你心爱的动漫打分吧:</span>
-                                             <Rate allowHalf defaultValue={0} />
-                                        </div>
-                                        <TextArea 
-                                            rows={4} 
-                                            placeholder="这个评论区需要一条神一样的发言..."
-                                            style={{ marginBottom: '12px', resize: 'none' }} 
+                                        <TextArea
+                                            rows={4}
+                                            value={replyContent}
+                                            onChange={e => setReplyContent(e.target.value)}
+                                            placeholder={user ? (collection ? "发条评论吐槽一下吧..." : "收藏番剧后即可发表评论~") : "登录后参与讨论..."}
+                                            style={{ marginBottom: '16px', borderRadius: '8px', resize: 'none' }}
+                                            disabled={!user || !collection} 
                                         />
-                                        <div style={{ textAlign: 'right' }}>
-                                            <Button type="primary" size="large">
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                            <Button 
+                                                type="primary" 
+                                                icon={<MessageOutlined />}
+                                                onClick={() => submitReply(null)} // No parent
+                                                disabled={!user || !replyContent.trim()}
+                                                loading={loading}
+                                            >
                                                 发表评论
                                             </Button>
                                         </div>
@@ -327,7 +446,8 @@ const AnimeDetailPage: React.FC = () => {
                             {/* 评论列表 */}
                             <List
                                 itemLayout="vertical"
-                                dataSource={comments.filter(c => !c.parent_id).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                                dataSource={comments}
+                                locale={{ emptyText: '还没有人评论，来抢沙发吧！' }}
                                 renderItem={(item) => (
                                     <div key={item.id}>
                                         <List.Item
@@ -338,95 +458,62 @@ const AnimeDetailPage: React.FC = () => {
                                                 borderRadius: '12px'
                                             }}
                                             actions={[
-                                                <Tooltip title="Like">
-                                                    <span onClick={() => handleLike(item.id)} style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                        {React.createElement(item.isLiked ? LikeFilled : LikeOutlined)}
-                                                        <span>{item.likes_count}</span>
-                                                    </span>
-                                                </Tooltip>,
-                                                <span onClick={() => handleReply(item.id)} style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                    <MessageOutlined />
-                                                    <span>{replyingTo === item.id ? '取消回复' : '回复'}</span>
-                                                </span>
+                                                <Space key="list-vertical-like-o" onClick={() => handleLike(item.id)} style={{ cursor: 'pointer', color: item.isLiked ? token.colorPrimary : 'inherit' }}>
+                                                    {item.isLiked ? <LikeFilled /> : <LikeOutlined />}
+                                                    {item.likes_count}
+                                                </Space>,
+                                                <span key="reply" onClick={() => handleReply(item.id)} style={{ cursor: 'pointer' }}>
+                                                    回复
+                                                </span>,
+                                                user?.role === 1 && <span key="audit-status" style={{ fontSize: '12px', color: item.status === 1 ? 'green' : 'red' }}>
+                                                {item.status === 1 ? '已通过' : '待审核/拒绝'}
+                                            </span>
                                             ]}
                                         >
                                             <List.Item.Meta
-                                                avatar={<Avatar src={item.user?.avatar} size="large" />}
+                                                avatar={<Avatar src={item.user?.avatar} icon={<UserOutlined />} />}
                                                 title={
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                        <Space direction="vertical" size={2}>
-                                                            <span style={{ fontWeight: 'bold', fontSize: '16px' }}>{item.user?.username}</span>
-                                                            <span style={{ color: token.colorTextSecondary, fontSize: '12px' }}>{item.created_at}</span>
-                                                        </Space>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <span>{item.user?.username || '用户' + item.user_id}</span>
+                                                        <span style={{ fontSize: '12px', color: token.colorTextSecondary }}>
+                                                            {new Date(item.created_at).toLocaleString()}
+                                                        </span>
                                                     </div>
                                                 }
-                                                description={
-                                                    <Paragraph style={{ marginTop: '12px', marginBottom: 0, fontSize: '15px', color: token.colorText }}>
-                                                        {item.content}
-                                                    </Paragraph>
-                                                }
+                                                description={null}
                                             />
-                                        </List.Item>
-
-                                        {/* Reply Input Box */}
-                                        {replyingTo === item.id && (
-                                            <div style={{ 
-                                                marginLeft: '48px', 
-                                                marginTop: '12px', 
-                                                padding: '16px', 
-                                                background: token.colorFillAlter, 
-                                                borderRadius: '8px' 
-                                            }}>
-                                                <div style={{ display: 'flex', gap: '12px' }}>
-                                                    <Input.TextArea 
-                                                        rows={2} 
+                                            <Paragraph 
+                                                ellipsis={{ rows: 3, expandable: true, symbol: '展开' }}
+                                                style={{ margin: 0, fontSize: '15px' }}
+                                            >
+                                                {item.content}
+                                            </Paragraph>
+                                            
+                                            {/* Reply Input Area if replying to this comment */}
+                                            {replyingTo === item.id && (
+                                                <div style={{ marginTop: '16px', padding: '16px', background: token.colorFillAlter, borderRadius: '8px' }}>
+                                                    <TextArea
+                                                        rows={2}
                                                         value={replyContent}
-                                                        onChange={(e) => setReplyContent(e.target.value)}
+                                                        onChange={e => setReplyContent(e.target.value)}
                                                         placeholder={`回复 @${item.user?.username}...`}
-                                                        style={{ resize: 'none' }}
+                                                        style={{ marginBottom: '8px' }}
+                                                        autoFocus
                                                     />
-                                                    <Button type="primary" onClick={() => submitReply(item.id)} style={{ alignSelf: 'flex-end' }}>
-                                                        发送
-                                                    </Button>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <Button size="small" style={{ marginRight: '8px' }} onClick={() => setReplyingTo(null)}>取消</Button>
+                                                        <Button type="primary" size="small" onClick={() => submitReply(item.id)}>回复</Button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                        
-                                        {/* Show replies (nested comments) if exist in the current page view - simplified for now */}
-                                        {/* Real implementation would recursively render or filter comments where parent_id === item.id */}
-                                        {comments.filter(c => c.parent_id === item.id).map(reply => (
-                                             <div key={reply.id} style={{ marginLeft: '48px', marginTop: '8px', padding: '16px', background: token.colorFillQuaternary, borderRadius: '8px' }}>
-                                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                                     <Avatar src={reply.user?.avatar} size="small" />
-                                                     <div>
-                                                         <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{reply.user?.username} <span style={{ fontWeight: 'normal', color: token.colorTextSecondary, fontSize: '12px' }}>{reply.created_at}</span></div>
-                                                         <div style={{ marginTop: '4px' }}>{reply.content}</div>
-                                                     </div>
-                                                 </div>
-                                             </div>
-                                        ))}
+                                            )}
+                                        </List.Item>
                                     </div>
                                 )}
                             />
-                            
-                            {/* Pagination */}
-                            {comments.filter(c => !c.parent_id).length > 0 && (
-                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
-                                    <Pagination
-                                        current={currentPage}
-                                        pageSize={pageSize}
-                                        total={comments.filter(c => !c.parent_id).length}
-                                        onChange={handlePageChange}
-                                        showSizeChanger={false}
-                                    />
-                                </div>
-                            )}
-
                         </section>
-
                     </Col>
 
-                    {/* 右侧信息侧边栏 (Sidebar / InfoBox) (30% - 25%) */}
+                    {/* 右侧边栏 (30% - 25%) */}
                     <Col xs={24} md={8} lg={7}>
                         <Card
                             bordered
@@ -490,9 +577,9 @@ const AnimeDetailPage: React.FC = () => {
                                     block 
                                     size="large"
                                     onClick={handleFollowClick}
-                                    style={isFollowed ? { backgroundColor: '#d9d9d9', borderColor: '#d9d9d9', color: 'rgba(0, 0, 0, 0.45)' } : {}}
+                                    style={collection ? { backgroundColor: '#d9d9d9', borderColor: '#d9d9d9', color: 'rgba(0, 0, 0, 0.45)' } : {}}
                                 >
-                                    {isFollowed ? '已追番' : '加入追番列表'}
+                                    {collection ? '已追番' : '加入追番列表'}
                                 </Button>
                             </div>
                         </Card>

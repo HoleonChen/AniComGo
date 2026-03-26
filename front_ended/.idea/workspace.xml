@@ -5,31 +5,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7aa65bc5-36f5-40bf-9301-36a6c100b820" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/front_ended/src/assets/background.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCardExpanded.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCardProgress.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/components/LoginModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/context/AuthContext.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/data/Model.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/AnimeDetailPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/SearchPage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend_Refactor_Proposal.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/api_docs_structured.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/components/AdminRoute.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/layout/AdminLayout.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/admin/AnimeMgt.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/admin/CommentAudit.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/admin/Dashboard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/pages/admin/UserMgt.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/services/animeService.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/services/apiClient.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/services/authService.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/services/commentService.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/services/fileService.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/services/userService.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/utils/animeUtils.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front_ended/src/utils/watchListUtils.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/1.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/src/assets/hero.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/src/assets/react.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/src/assets/vite.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/src/data/mockData.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/data/mockData.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front_ended/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/main.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/components/AnimeCardExpanded.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCardExpanded.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/components/AnimeCardProgress.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/components/AnimeCardProgress.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/components/LoginModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/components/LoginModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/data/mockData.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/pages/AnimeDetailPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/AnimeDetailPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/HomePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/HomePage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/NavPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/NavPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/ProfilePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/ProfilePage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/src/pages/SearchPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/SearchPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/SeasonPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/SeasonPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front_ended/src/pages/WatchListPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/src/pages/WatchListPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front_ended/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front_ended/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,8 +52,8 @@
   </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
-      <entry key="chat-panel" value="Gemini 3 Pro (Preview)" />
-      <entry key="agent-panel" value="Gemini 3 Pro (Preview)" />
+      <entry key="chat-panel" value="Gemini 3.1 Pro" />
+      <entry key="agent-panel" value="Gemini 3.1 Pro" />
     </selectedModels>
   </component>
   <component name="Git.Settings">
@@ -65,6 +71,9 @@
     &quot;accountId&quot;: &quot;d9db01fa-a665-45fe-9755-159c381efef4&quot;
   }
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -96,6 +105,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/front_ended" />
       <recent name="$PROJECT_DIR$/front_ended/src/assets" />
     </key>
   </component>
@@ -117,7 +127,11 @@
       <workItem from="1773729451545" duration="1224000" />
       <workItem from="1773730734771" duration="24759000" />
       <workItem from="1774246413576" duration="20591000" />
-      <workItem from="1774418730604" duration="4610000" />
+      <workItem from="1774418730604" duration="7681000" />
+      <workItem from="1774442227116" duration="613000" />
+      <workItem from="1774504536048" duration="10958000" />
+      <workItem from="1774518720096" duration="1225000" />
+      <workItem from="1774523024852" duration="9553000" />
     </task>
     <servers />
   </component>

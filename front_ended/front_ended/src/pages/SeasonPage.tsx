@@ -1,33 +1,52 @@
-import React from 'react';
-import { Layout, Row, Col, theme, Typography, Divider } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Layout, Row, Col, theme, Typography, Divider, Spin } from 'antd';
 import AnimeCard from '../components/AnimeCard';
-import { mockAnimes, getUpdateInfo, type Anime } from '../data/mockData';
+import { type Anime } from '../data/Model';
+import { getUpdateInfo } from '../utils/animeUtils';
 import heroImage from '../assets/background.jpg';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import animeService from '../services/animeService';
 
 const { Content, Footer } = Layout;
 const { Title } = Typography;
 
 const SeasonPage: React.FC = () => {
     const { token } = theme.useToken();
-    const navigate = useNavigate(); // Initialize hook
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [airingAnimes, setAiringAnimes] = useState<Anime[]>([]);
+    const [movieAnimes, setMovieAnimes] = useState<Anime[]>([]);
 
     // 假设今天是 2026-03-18 (周三)
     // 实际项目中应使用 new Date()
     const today = 3; // 0: Sun, 1: Mon, ..., 3: Wed
-
     const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
-    // 1. 过滤连载中的 TV 动画
-    const airingAnimes = mockAnimes.filter(a => a.status === 1 && a.type === 'TV');
-
-    // 2. 过滤剧场版
-    const movieAnimes = mockAnimes.filter(a => a.type === 'Movie');
+    useEffect(() => {
+        const fetchAnimes = async () => {
+            setLoading(true);
+            try {
+                // Fetch current season animes (Simulated by fetch list for now)
+                // Ideally backend has /animes/season or parameters
+                const { list } = await animeService.getAnimes(1, 100); 
+                
+                // Filter logic client-side for now
+                setAiringAnimes(list.filter(a => a.status === 1 && a.type === 'TV'));
+                setMovieAnimes(list.filter(a => a.type === 'Movie'));
+            } catch (error) {
+                console.error("Failed to fetch season animes");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAnimes();
+    }, []);
 
     // 3. 按星期分组
     const groupedAnimes: Record<number, Anime[]> = {};
     airingAnimes.forEach(anime => {
         const day = new Date(anime.release_date).getDay();
+        // Adjust for potential day mismatch if needed, but basic Date.getDay() works for client timezone
         if (!groupedAnimes[day]) groupedAnimes[day] = [];
         groupedAnimes[day].push(anime);
     });
@@ -104,93 +123,101 @@ const SeasonPage: React.FC = () => {
                         </h2>
                     </div>
 
-                    {/* 按星期展示连载动画 */}
-                    {sortedDays.map(dayIndex => {
-                        const animes = groupedAnimes[dayIndex];
-                        if (!animes || animes.length === 0) return null;
+                    {loading ? (
+                         <div style={{ textAlign: 'center', padding: '50px' }}>
+                            <Spin size="large" />
+                         </div>
+                    ) : ( 
+                        <>
+                            {/* 按星期展示连载动画 */}
+                            {sortedDays.map(dayIndex => {
+                                const animes = groupedAnimes[dayIndex];
+                                if (!animes || animes.length === 0) return null;
 
-                        const isToday = dayIndex === today;
+                                const isToday = dayIndex === today;
 
-                        return (
-                            <div key={dayIndex} style={{ marginBottom: '40px' }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    marginBottom: '20px',
-                                    borderLeft: `4px solid ${isToday ? token.colorPrimary : token.colorBorder}`,
-                                    paddingLeft: '12px'
-                                }}>
-                                    <Title level={3} style={{ margin: 0, color: isToday ? token.colorPrimary : token.colorText }}>
-                                        {weekDays[dayIndex]} {isToday && '(今天)'}
-                                    </Title>
+                                return (
+                                    <div key={dayIndex} style={{ marginBottom: '40px' }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            marginBottom: '20px',
+                                            borderLeft: `4px solid ${isToday ? token.colorPrimary : token.colorBorder}`,
+                                            paddingLeft: '12px'
+                                        }}>
+                                            <Title level={3} style={{ margin: 0, color: isToday ? token.colorPrimary : token.colorText }}>
+                                                {weekDays[dayIndex]} {isToday && '(今天)'}
+                                            </Title>
+                                        </div>
+
+                                        <Row gutter={[20, 24]}>
+                                            {animes.map((anime) => (
+                                                <Col
+                                                    xs={24}
+                                                    sm={12}
+                                                    md={8}
+                                                    lg={6}
+                                                    xl={4}
+                                                    xxl={4}
+                                                    key={anime.id}
+                                                >
+                                                    <AnimeCard
+                                                        title={anime.title}
+                                                        poster={anime.poster_url}
+                                                        rating={anime.rating}
+                                                        tags={anime.tags ? anime.tags.map(t => t.name) : []}
+                                                        updateInfo={getUpdateInfo(anime)}
+                                                        onClick={() => navigate(`/anime/${anime.id}`)}
+                                                    />
+                                                </Col>
+                                            ))}
+                                        </Row>
+                                    </div>
+                                );
+                            })}
+                            
+                            {(movieAnimes.length > 0) && <Divider style={{ margin: '40px 0' }} />}
+
+                            {/* 剧场版板块 */}
+                            {movieAnimes.length > 0 && (
+                                <div style={{ marginBottom: '40px' }}>
+                                    <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            marginBottom: '20px',
+                                            borderLeft: `4px solid ${token.colorWarning}`, // 使用不同颜色区分
+                                            paddingLeft: '12px'
+                                        }}>
+                                        <Title level={3} style={{ margin: 0 }}>
+                                            本季剧场版 🎬
+                                        </Title>
+                                    </div>
+
+                                    <Row gutter={[20, 24]}>
+                                        {movieAnimes.map((anime) => (
+                                            <Col
+                                                xs={24}
+                                                sm={12}
+                                                md={8}
+                                                lg={6}
+                                                xl={4}
+                                                xxl={4}
+                                                key={anime.id}
+                                            >
+                                                <AnimeCard
+                                                    title={anime.title}
+                                                    poster={anime.poster_url}
+                                                    rating={anime.rating}
+                                                    tags={anime.tags ? anime.tags.map(t => t.name) : []}
+                                                    updateInfo={getUpdateInfo(anime)}
+                                                    onClick={() => navigate(`/anime/${anime.id}`)}
+                                                />
+                                            </Col>
+                                        ))}
+                                    </Row>
                                 </div>
-
-                                <Row gutter={[20, 24]}>
-                                    {animes.map((anime) => (
-                                        <Col
-                                            xs={24}
-                                            sm={12}
-                                            md={8}
-                                            lg={6}
-                                            xl={4}
-                                            xxl={4}
-                                            key={anime.id}
-                                        >
-                                            <AnimeCard
-                                                title={anime.title}
-                                                poster={anime.poster_url}
-                                                rating={anime.rating}
-                                                tags={anime.tags.map(t => t.name)}
-                                                updateInfo={getUpdateInfo(anime)}
-                                                onClick={() => navigate(`/anime/${anime.id}`)}
-                                            />
-                                        </Col>
-                                    ))}
-                                </Row>
-                            </div>
-                        );
-                    })}
-
-                    <Divider style={{ margin: '40px 0' }} />
-
-                    {/* 剧场版板块 */}
-                    {movieAnimes.length > 0 && (
-                        <div style={{ marginBottom: '40px' }}>
-                             <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    marginBottom: '20px',
-                                    borderLeft: `4px solid ${token.colorWarning}`, // 使用不同颜色区分
-                                    paddingLeft: '12px'
-                                }}>
-                                <Title level={3} style={{ margin: 0 }}>
-                                    本季剧场版 🎬
-                                </Title>
-                            </div>
-
-                            <Row gutter={[20, 24]}>
-                                {movieAnimes.map((anime) => (
-                                    <Col
-                                        xs={24}
-                                        sm={12}
-                                        md={8}
-                                        lg={6}
-                                        xl={4}
-                                        xxl={4}
-                                        key={anime.id}
-                                    >
-                                        <AnimeCard
-                                            title={anime.title}
-                                            poster={anime.poster_url}
-                                            rating={anime.rating}
-                                            tags={anime.tags.map(t => t.name)}
-                                            updateInfo={getUpdateInfo(anime)}
-                                            onClick={() => navigate(`/anime/${anime.id}`)}
-                                        />
-                                    </Col>
-                                ))}
-                            </Row>
-                        </div>
+                            )}
+                        </>
                     )}
 
                 </div>

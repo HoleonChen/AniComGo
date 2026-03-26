@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, message, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
-import { mockCurrentUser } from '../data/mockData';
+import authService from '../services/authService';
 
 const LoginModal: React.FC = () => {
-    const { isLoginModalOpen, closeLoginModal, login } = useAuth();
+    const { isLoginModalOpen, closeLoginModal, login: authContextLogin } = useAuth();
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -21,23 +21,38 @@ const LoginModal: React.FC = () => {
     const handleSubmit = async (values: any) => {
         setLoading(true);
         try {
-            // Simulation of API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
             if (activeTab === 'login') {
-                // Mock login logic
-                 login('mock-jwt-token-123456', { ...mockCurrentUser, username: values.username });
-                 message.success('登录成功！');
-                 closeLoginModal();
+                const response = await authService.login({
+                    username: values.username,
+                    password: values.password
+                });
+                
+                if (response.code === 200) {
+                     authContextLogin(response.data.token, response.data.user);
+                     message.success('登录成功！');
+                     closeLoginModal();
+                } else {
+                     message.error(response.message || '登录失败');
+                }
             } else {
-                // Mock registration logic
-                message.success('注册成功！请登录');
-                setActiveTab('login');
-                form.resetFields();
+                // Registration
+                const response = await authService.register({
+                    username: values.username,
+                    password: values.password,
+                    // Optional fields if form has them
+                });
+
+                if (response.code === 200) {
+                    message.success('注册成功！已自动登录');
+                    authContextLogin(response.data.token, response.data.user);
+                    closeLoginModal();
+                } else {
+                    message.error(response.message || '注册失败');
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Operation failed:', error);
-            message.error('操作失败，请重试');
+            message.error(error.message || '操作失败，请重试');
         } finally {
             setLoading(false);
         }
@@ -50,7 +65,7 @@ const LoginModal: React.FC = () => {
             open={isLoginModalOpen}
             onCancel={closeLoginModal}
             width={400}
-            destroyOnClose
+            destroyOnClose={true}
             centered
         >
              <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -105,7 +120,7 @@ const LoginModal: React.FC = () => {
                         {activeTab === 'login' ? '登录' : '注册'}
                     </Button>
                 </Form.Item>
-                
+
                  <div style={{ textAlign: 'center' }}>
                      {activeTab === 'login' ? (
                         <>还没有账号？ <a onClick={() => setActiveTab('register')}>立即注册</a></>
@@ -119,4 +134,3 @@ const LoginModal: React.FC = () => {
 };
 
 export default LoginModal;
-

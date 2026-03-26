@@ -1,23 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Row, Col, theme, Avatar, Statistic, Tabs, Empty, Button, Upload, message } from 'antd';
 import type { RcFile } from 'antd/es/upload/interface';
 import { UserOutlined, FireOutlined, CheckCircleOutlined, LogoutOutlined, CameraOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AnimeCardProgress from '../components/AnimeCardProgress';
-import { mockCurrentUser, mockUserCollections, getWatchingAndCompleted, getUpdateInfo } from '../data/mockData';
+import { getUpdateInfo } from '../utils/animeUtils';
+import { processUserWatchList } from '../utils/watchListUtils';
 import heroImage from '../assets/background.jpg';
+import fileService from '../services/fileService'; // Import fileService
+import userService from '../services/userService'; // Import userService
+import type { Collection, Tag } from '../data/Model';
 
 const { Content, Footer } = Layout;
 
 const ProfilePage: React.FC = () => {
     const { token } = theme.useToken();
     const navigate = useNavigate();
-    const { isAuthenticated, openLoginModal, logout } = useAuth();
-    const { watching, completed } = getWatchingAndCompleted(mockUserCollections);
-    const [avatarUrl, setAvatarUrl] = useState(mockCurrentUser.avatar_url);
+    const { isAuthenticated, openLoginModal, logout, user } = useAuth();
+    
+    const [collections, setCollections] = useState<Collection[]>([]);
+    const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
 
-    const handleBeforeUpload = (file: RcFile) => {
+    useEffect(() => {
+        if (user) {
+            setAvatarUrl(user.avatar_url);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        const fetchCollections = async () => {
+            if (isAuthenticated) {
+                try {
+                    const data = await userService.getCollections();
+                    setCollections(data);
+                } catch (error) {
+                    message.error('获取追番列表失败');
+                }
+            }
+        };
+        fetchCollections();
+    }, [isAuthenticated]);
+
+    const handleProgressUpdate = async (collectionId: number, animeId: number, newProgress: number) => {
+        // Optimistic update
+        setCollections(prev => prev.map(c => 
+            c.id === collectionId ? { ...c, progress: newProgress } : c
+        ));
+
+        // Call API
+        try {
+            const success = await userService.updateCollectionProgress(animeId, newProgress);
+            if (!success) {
+                message.error('更新进度失败');
+                const data = await userService.getCollections();
+                setCollections(data);
+            } else {
+                message.success(`更新进度至第 ${newProgress} 话`);
+            }
+        } catch (e) {
+            message.error('更新进度异常');
+        }
+    };
+
+    const validCollections = collections.filter(c => c.anime);
+    const { watching, completed } = processUserWatchList(validCollections);
+
+    const handleBeforeUpload = async (file: RcFile) => { // Make async
         const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
         if (!isJpgOrPng) {
             message.error('只支持 JPG/PNG 格式!');
@@ -29,22 +78,28 @@ const ProfilePage: React.FC = () => {
             return Upload.LIST_IGNORE;
         }
 
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            const result = reader.result as string;
-            setAvatarUrl(result);
-            mockCurrentUser.avatar_url = result; // Update mock data for consistency in this session
-            message.success('头像上传成功!');
-        };
+        try {
+            // Upload image to generic file service
+            const url = await fileService.uploadImage(file);
+            setAvatarUrl(url);
+            
+            // Update user profile with new avatar URL
+            if(user) {
+                await userService.updateMe({ ...user, avatar_url: url });
+                message.success('头像上传成功!');
+            }
+        } catch (error) {
+            console.error(error);
+            message.error('头像上传失败');
+        }
 
         return false; // Prevent default upload behavior
     };
 
     // 计算统计数据
-    const totalWatched = mockUserCollections.length;
-    const avgRating = (mockUserCollections.reduce((sum, c) => sum + c.rating, 0) / totalWatched).toFixed(1);
-    const totalEpisodes = mockUserCollections.reduce((sum, c) => sum + c.progress, 0);
+    const totalWatched = validCollections.length;
+    const avgRating = totalWatched > 0 ? (validCollections.reduce((sum, c) => sum + c.rating, 0) / totalWatched).toFixed(1) : '0.0';
+    const totalEpisodes = validCollections.reduce((sum, c) => sum + c.progress, 0);
 
     return (
         <Layout style={{ minHeight: '100vh', backgroundColor: 'transparent', position: 'relative' }}>
@@ -180,10 +235,10 @@ const ProfilePage: React.FC = () => {
                                             </div>
                                         </Upload>
                                         <h2 style={{ margin: '16px 0 8px 0', color: token.colorTextHeading }}>
-                                            {mockCurrentUser.username}
+                                            {user?.username}
                                         </h2>
                                         <p style={{ color: token.colorTextDescription, margin: 0 }}>
-                                            {mockCurrentUser.bio}
+                                            {user?.bio || '这家伙很懒，什么都没有写...'}
                                         </p>
                                     </Col>
 
@@ -244,7 +299,7 @@ const ProfilePage: React.FC = () => {
                                             }}>
                                                 {watching.length > 0 ? (
                                                     <Row gutter={[20, 24]}>
-                                                        {watching.map((collection) => (
+                                                        {watching.map((collection: Collection) => (
                                                             <Col
                                                                 xs={24}
                                                                 sm={12}
@@ -258,13 +313,14 @@ const ProfilePage: React.FC = () => {
                                                                     title={collection.anime?.title || ''}
                                                                     poster={collection.anime?.poster_url || ''}
                                                                     rating={collection.anime?.rating || 0}
-                                                                    tags={collection.anime?.tags.map(t => t.name) || []}
+                                                                    tags={collection.anime?.tags.map((t: Tag) => t.name) || []}
                                                                     updateInfo={getUpdateInfo(collection.anime!)}
                                                                     userRating={collection.rating}
                                                                     mode="watching"
                                                                     progress={collection.progress}
                                                                     totalEpisodes={collection.anime?.total_episodes || 1}
                                                                     onCardClick={() => collection.anime && navigate(`/anime/${collection.anime.id}`)}
+                                                                    onUpdateProgress={(newVal) => handleProgressUpdate(collection.id, collection.anime!.id, newVal)}
                                                                 />
                                                             </Col>
                                                         ))}
@@ -290,7 +346,7 @@ const ProfilePage: React.FC = () => {
                                             }}>
                                                 {completed.length > 0 ? (
                                                     <Row gutter={[20, 24]}>
-                                                        {completed.map((collection) => (
+                                                        {completed.map((collection: Collection) => (
                                                             <Col
                                                                 xs={24}
                                                                 sm={12}
@@ -304,7 +360,7 @@ const ProfilePage: React.FC = () => {
                                                                     title={collection.anime?.title || ''}
                                                                     poster={collection.anime?.poster_url || ''}
                                                                     rating={collection.anime?.rating || 0}
-                                                                    tags={collection.anime?.tags.map(t => t.name) || []}
+                                                                    tags={collection.anime?.tags.map((t: Tag) => t.name) || []}
                                                                     updateInfo={getUpdateInfo(collection.anime!)}
                                                                     userRating={collection.rating}
                                                                     mode="completed"
@@ -342,4 +398,3 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
-
