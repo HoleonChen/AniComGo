@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: anicomgo-backend
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:${AVATAR_MAX_FILE_SIZE:2MB}}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:${AVATAR_MAX_REQUEST_SIZE:2MB}}
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/anicomgo?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:anicomgo-default-jwt-secret-key-change-me-please-123456}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:1440}
+  upload:
+    save-path: ${UPLOAD_SAVE_PATH:${AVATAR_STORAGE_PATH:uploads}}
+    base-url: ${UPLOAD_BASE_URL:http://127.0.0.1:9000/}
+    max-size-bytes: ${UPLOAD_MAX_SIZE_BYTES:${AVATAR_MAX_SIZE_BYTES:2097152}}
+    allowed-extensions: ${UPLOAD_ALLOWED_EXTENSIONS:${AVATAR_ALLOWED_EXTENSIONS:jpg,jpeg,png,webp}}
+    allowed-content-types: ${UPLOAD_ALLOWED_CONTENT_TYPES:${AVATAR_ALLOWED_CONTENT_TYPES:image/jpeg,image/png,image/webp}}
+    allowed-types: ${UPLOAD_ALLOWED_TYPES:common,avatar,poster}
+
+mybatis-plus:
+  configuration:
+    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.stdout.StdOutImpl}
+  mapper-locations: classpath*:/mapper/**/*.xml
