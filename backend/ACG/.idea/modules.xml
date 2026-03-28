@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/ACG.iml" filepath="$PROJECT_DIR$/.idea/ACG.iml" />
-      <module fileurl="file://$PROJECT_DIR$/anicomgo-backend/anicomgo-backend.iml" filepath="$PROJECT_DIR$/anicomgo-backend/anicomgo-backend.iml" />
     </modules>
   </component>
 </project>
