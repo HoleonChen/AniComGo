@@ -2,7 +2,8 @@ import axios from 'axios';
 import jsCookie from 'js-cookie';
 
 // Default to server URL if not specified in environment
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://frp-dry.com:29960';
+// Using relative /api path so that it loops back through Vite's dev proxy rather than direct cross-origin calls which can be slow and blocked
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const apiClient = axios.create({
     baseURL: BASE_URL,
